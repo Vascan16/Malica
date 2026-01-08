@@ -590,7 +590,21 @@
                     <div key={m} className={`p-4 flex justify-between items-center ${idx === 0 ? 'bg-[#002f55]/10' : ''}`}>
                       <div className="flex items-center gap-3">
                         <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black ${idx === 0 ? 'bg-[#002f55] text-[#e4b00f]' : 'bg-slate-100 text-slate-400'}`}>{idx + 1}</span>
-                        <div className="flex flex-col"><span className="font-bold text-slate-700">{m}</span>{memberTitles.length > 0 && (<div className="flex flex-wrap gap-1 mt-0.5">{memberTitles.map((t, i) => (<div key={i} className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide border ${t.bg} ${t.color}`}><t.icon size={10} /> {t.label}</div>))}</div>)}</div>
+                        <div className="flex flex-col"><span className="font-bold text-slate-700">{m}</span>
+                        {memberTitles.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                            {memberTitles.map((t, i) => (
+                                <div 
+                                key={i} 
+                                title={t.label}
+                                className={`flex items-center justify-center w-6 h-6 rounded-lg border ${t.bg} ${t.color}`}
+                                >
+                                <t.icon size={14} />
+                                </div>
+                            ))}
+                            </div>
+                        )}
+                        </div>
                         <button 
                             onClick={(e) => { e.stopPropagation(); onToggleHunger(m); }}
                             className={`ml-2 p-2 rounded-full transition-all ${memberHunger[m] ? 'bg-orange-100 text-orange-500 shadow-sm' : 'text-slate-300 hover:bg-slate-50'}`}

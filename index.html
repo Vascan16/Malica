@@ -924,6 +924,8 @@
           };
 
           const performAddEntry = async () => {
+            const batch = writeBatch(db); // Init batch
+
             const data = { 
               date, 
               payer, 
@@ -935,7 +937,20 @@
             };
             if (splitType === 'manual') data.manualAmounts = { ...manualAmounts };
              
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'history'), data);
+            // 1. Add history entry via batch
+            const newHistoryRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'history'));
+            batch.set(newHistoryRef, data);
+
+            // 2. Reset hunger for everyone who is hungry
+            Object.keys(memberHunger).forEach(name => {
+                if (memberHunger[name]) {
+                    const memberRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', name);
+                    batch.update(memberRef, { isHungry: false });
+                }
+            });
+
+            await batch.commit(); // Commit all changes
+
             setAmount('');
             setManualAmounts({});
             setActiveTab('history');

@@ -4,48 +4,75 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Malica Manager</title>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React & Babel -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel za prevajanje JSX v brskalniku -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/lucide-react"></script>
 
-    <style>
-        @media print {
-            @page { margin: 1cm; size: A4; }
-            html, body { width: 100%; height: 100%; margin: 0 !important; padding: 0 !important; overflow: visible !important; background-color: white !important; }
-            body > * { display: none !important; }
-            #root { display: block !important; }
-            .print-container { display: block !important; position: static !important; width: 100% !important; height: auto !important; overflow: visible !important; font-family: sans-serif; font-size: 10px; color: black; background: white; }
-            nav, header, main, .fixed, button, .no-print { display: none !important; }
-            .avoid-break { page-break-inside: avoid; }
-            .page-break { page-break-before: always; }
+    <!-- Import Map za knjižnice (omogoča 'import ... from ...' sintakso) -->
+    <script type="importmap">
+    {
+        "imports": {
+            "react": "https://esm.sh/react@18.2.0",
+            "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+            "lucide-react": "https://esm.sh/lucide-react@0.292.0?external=react",
+            "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
+            "firebase/auth": "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js",
+            "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
         }
-        .print-container { display: none; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .report-table th, .report-table td { border: 1px solid #e2e8f0; padding: 4px 6px; }
-        .report-table th { background-color: #f8fafc; font-weight: bold; text-transform: uppercase; font-size: 9px; }
-        .code-block { font-family: 'Courier New', Courier, monospace; background-color: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 4px; white-space: pre-wrap; font-size: 9px; color: #334155; }
-    </style>
+    }
+    </script>
 </head>
 <body class="bg-slate-50">
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, addDoc, deleteDoc, onSnapshot, query, writeBatch, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import React, { useState, useEffect, useMemo, useRef } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import {
+          Users, History, PlusCircle, Trash2, TrendingDown,
+          CreditCard, UserPlus, ArrowRightCircle, ArrowDownCircle, Calendar,
+          Wallet, Calculator, CheckCircle2, Download,
+          AlertTriangle, FileText, CheckSquare, Square, Lock, Info, Scale,
+          ListOrdered, RefreshCcw, Save, Table, Grid, Printer, Bell, X,
+          Crown, PiggyBank, Ghost, Medal, Dices, Eye, EyeOff, BarChart3, Pizza
+        } from 'lucide-react';
+        import { initializeApp } from 'firebase/app';
+        import { 
+          getAuth, 
+          signInAnonymously, 
+          signInWithCustomToken, 
+          onAuthStateChanged 
+        } from 'firebase/auth';
+        import { 
+          getFirestore, 
+          collection, 
+          doc, 
+          setDoc, 
+          addDoc, 
+          deleteDoc, 
+          onSnapshot, 
+          query, 
+          writeBatch, 
+          getDocs, 
+          serverTimestamp 
+        } from 'firebase/firestore';
 
-        const firebaseConfig = {
+        // ==========================================
+        // TVOJA KODA SE ZAČNE TUKAJ
+        // ==========================================
+
+        // ==========================================
+        // 1. KONFIGURACIJA IN KONSTANTE (POSODOBNJENO)
+        // ==========================================
+
+        // ---------------------------------------------------------
+        // TUKAJ VSTAVI SVOJE FIREBASE PODATKE ZA GITHUB/LOKALNO:
+        // (Ko teče v Canvasu, se to ignorira)
+        // ---------------------------------------------------------
+        const MOJ_FIREBASE_CONFIG = {
           apiKey: "AIzaSyBjoIbXZEELew5F1zVnYzUbStp0IfVAwgg",
           authDomain: "malicamanagerpro.firebaseapp.com",
           projectId: "malicamanagerpro",
@@ -54,446 +81,1022 @@
           appId: "1:902764840464:web:7ad08867d6c6593efd2c95",
           measurementId: "G-WDP7KK30QQ"
         };
+        // ---------------------------------------------------------
 
-        const appId = "malica-manager-v1";
-        const firebaseApp = initializeApp(firebaseConfig);
-        const auth = getAuth(firebaseApp);
-        const db = getFirestore(firebaseApp);
+        // Inteligentna izbira konfiguracije
+        let firebaseConfig;
+        let appId;
 
-        const { 
-            Users, History, PlusCircle, Trash2, TrendingDown,
-            CreditCard, UserPlus, ArrowRightCircle, ArrowDownCircle, Calendar,
-            Wallet, Calculator, CheckCircle2, Download,
-            AlertTriangle, FileText, CheckSquare, Square, Lock, Info, Scale,
-            ListOrdered, RefreshCcw, Save, Table, Grid, Printer, Bell, X,
-            Crown, PiggyBank, Ghost, Medal, Dices, Eye, EyeOff, BarChart3, Pizza 
-        } = lucideReact;
+        try {
+            // 1. Poskus: Ali smo v Canvas okolju?
+            if (typeof __firebase_config !== 'undefined') {
+                firebaseConfig = JSON.parse(__firebase_config);
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            } else {
+                // 2. Fallback: Smo na GitHubu ali lokalno -> Uporabi tvoje podatke
+                firebaseConfig = MOJ_FIREBASE_CONFIG;
+                appId = 'malica-manager-v1'; // Ime mape v bazi, lahko spremeniš
+            }
+        } catch (e) {
+            // Varnostni fallback
+            console.warn("Preklop na ročno konfiguracijo.");
+            firebaseConfig = MOJ_FIREBASE_CONFIG;
+            appId = 'malica-manager-v1';
+        }
 
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Skrite kode (Base64) - Kirurško zamenjane in zamaskirane
         const _appVitals = {
-            a_key: atob("NTEyNA=="),
-            e_key: atob("OTkxMQ=="),
-            s_key: atob("Nzc3Nw==")
+          a_key: atob("NTEyNA=="), // 5124
+          e_key: atob("OTkxMQ=="), // 9911
+          s_key: atob("Nzc3Nw==")  // 7777
         };
 
         const ACCESS_CODE = _appVitals.a_key;
         const EDIT_CODE = _appVitals.e_key;
         const ADMIN_PIN = _appVitals.s_key;
 
+        // ==========================================
+        // 2. POMOŽNE FUNKCIJE
+        // ==========================================
+
         const money = (val) => Math.round((val + Number.EPSILON) * 100) / 100;
 
         const getMatrixValue = (entry, member, type) => {
-            if (type === 'Z') return entry.type === 'adjustment' && entry.user === member ? (parseFloat(entry.amount) || 0) : 0;
-            if (type === 'P') return entry.payer === member ? (parseFloat(entry.amount) || 0) : 0;
+          if (type === 'Z') {
+            return entry.type === 'adjustment' && entry.user === member ? (parseFloat(entry.amount) || 0) : 0;
+          }
+          if (type === 'P') return entry.payer === member ? (parseFloat(entry.amount) || 0) : 0;
+          else {
             if (entry.splitType === 'manual' && entry.manualAmounts) return parseFloat(entry.manualAmounts[member]) || 0;
             if (entry.participants && entry.participants.includes(member)) return (parseFloat(entry.amount) || 0) / entry.participants.length;
             return 0;
+          }
         };
 
         const calculateTitles = (members, balances, history) => {
-            const titles = {}; 
-            const addTitle = (member, titleObj) => {
-                if (!titles[member]) titles[member] = [];
-                titles[member].push(titleObj);
-            };
-            if (members.length < 2 || history.length === 0) return titles;
-            const maxBal = Math.max(...Object.values(balances));
-            if (maxBal > 0) {
-                const mecen = members.find(m => balances[m] === maxBal);
-                if (mecen) addTitle(mecen, { icon: Crown, label: 'Mecen', color: 'text-yellow-600', bg: 'bg-yellow-100 border-yellow-200' });
+          const titles = {}; 
+          const addTitle = (member, titleObj) => {
+            if (!titles[member]) titles[member] = [];
+            titles[member].push(titleObj);
+          };
+
+          if (members.length < 2 || history.length === 0) return titles;
+
+          const maxBal = Math.max(...Object.values(balances));
+          if (maxBal > 0) {
+            const mecen = members.find(m => balances[m] === maxBal);
+            if (mecen) addTitle(mecen, { icon: Crown, label: 'Mecen', color: 'text-yellow-600', bg: 'bg-yellow-100 border-yellow-200' });
+          }
+
+          const minBal = Math.min(...Object.values(balances));
+          if (minBal < 0) {
+            const gorenjec = members.find(m => balances[m] === minBal);
+            if (gorenjec) addTitle(gorenjec, { icon: PiggyBank, label: 'Gorenjec', color: 'text-rose-600', bg: 'bg-rose-100 border-rose-200' });
+          }
+
+          const paymentCounts = {};
+          members.forEach(m => paymentCounts[m] = 0);
+          history.forEach(e => { if (e.type !== 'adjustment' && e.payer) paymentCounts[e.payer] = (paymentCounts[e.payer] || 0) + 1; });
+          const maxPayments = Math.max(...Object.values(paymentCounts));
+          if (maxPayments > 0) {
+            const bankomat = members.find(m => paymentCounts[m] === maxPayments);
+            if (bankomat) addTitle(bankomat, { icon: CreditCard, label: 'Bankomat', color: 'text-blue-600', bg: 'bg-blue-100 border-blue-200' });
+          }
+
+          const participationCounts = {};
+          members.forEach(m => participationCounts[m] = 0);
+          history.forEach(e => { 
+            if (e.type !== 'adjustment' && e.participants) {
+              e.participants.forEach(p => participationCounts[p] = (participationCounts[p] || 0) + 1);
             }
-            const minBal = Math.min(...Object.values(balances));
-            if (minBal < 0) {
-                const gorenjec = members.find(m => balances[m] === minBal);
-                if (gorenjec) addTitle(gorenjec, { icon: PiggyBank, label: 'Gorenjec', color: 'text-rose-600', bg: 'bg-rose-100 border-rose-200' });
-            }
-            const paymentCounts = {};
-            members.forEach(m => paymentCounts[m] = 0);
-            history.forEach(e => { if (e.type !== 'adjustment' && e.payer) paymentCounts[e.payer] = (paymentCounts[e.payer] || 0) + 1; });
-            const maxPayments = Math.max(...Object.values(paymentCounts));
-            if (maxPayments > 0) {
-                const bankomat = members.find(m => paymentCounts[m] === maxPayments);
-                if (bankomat) addTitle(bankomat, { icon: CreditCard, label: 'Bankomat', color: 'text-blue-600', bg: 'bg-blue-100 border-blue-200' });
-            }
-            const participationCounts = {};
-            members.forEach(m => participationCounts[m] = 0);
-            history.forEach(e => { if (e.type !== 'adjustment' && e.participants) e.participants.forEach(p => participationCounts[p] = (participationCounts[p] || 0) + 1); });
-            const minPart = Math.min(...Object.values(participationCounts));
-            if (history.length > 2) {
-                const duh = members.find(m => participationCounts[m] === minPart);
-                if (duh) addTitle(duh, { icon: Ghost, label: 'Duh', color: 'text-slate-500', bg: 'bg-slate-200 border-slate-300' });
-            }
-            const absBalances = members.map(m => Math.abs(balances[m] || 0));
-            const minAbs = Math.min(...absBalances);
-            const zenMasters = members.filter(m => Math.abs(balances[m] || 0) === minAbs);
-            zenMasters.forEach(m => addTitle(m, { icon: Scale, label: 'Zen', color: 'text-emerald-600', bg: 'bg-emerald-100 border-emerald-200' }));
-            return titles;
+          });
+          const minPart = Math.min(...Object.values(participationCounts));
+          if (history.length > 2) {
+              const duh = members.find(m => participationCounts[m] === minPart);
+              if (duh) addTitle(duh, { icon: Ghost, label: 'Duh', color: 'text-slate-500', bg: 'bg-slate-200 border-slate-300' });
+          }
+
+          const absBalances = members.map(m => Math.abs(balances[m] || 0));
+          const minAbs = Math.min(...absBalances);
+          const zenMasters = members.filter(m => Math.abs(balances[m] || 0) === minAbs);
+          zenMasters.forEach(m => {
+            addTitle(m, { icon: Scale, label: 'Zen', color: 'text-emerald-600', bg: 'bg-emerald-100 border-emerald-200' });
+          });
+
+          return titles;
         };
 
+        // Matlab Izvoz z avtomatskim obračunom in poravnavo dolgov
         const getMatlabCode = (history, members) => {
-            const adjustments = history.filter(e => e.type === 'adjustment');
-            const transactions = history.filter(e => e.type !== 'adjustment').reverse();
-            const headerStr = `clc;\nclear all;\n`;
-            const membersStr = `clani = {${members.map(m => `'${m}'`).join(', ')}};`;
-            const zVector = members.map(m => adjustments.reduce((s, e) => s + (e.user === m ? e.amount : 0), 0).toFixed(2)).join(', ');
-            const zStr = `Z = [${zVector}]; % Začetna stanja`;
-            const pRows = transactions.length > 0 ? transactions.map(t => members.map(m => getMatrixValue(t, m, 'P').toFixed(2)).join(', ')) : [members.map(() => '0.00').join(', ')];
-            const pStr = `P = [\n  ${pRows.join(';\n   ')}\n]; % Matrika Plačil (P)`;
-            const sRows = transactions.length > 0 ? transactions.map(t => members.map(m => getMatrixValue(t, m, 'S').toFixed(2)).join(', ')) : [members.map(() => '0.00').join(', ')];
-            const sStr = `S = [\n  ${sRows.join(';\n   ')}\n]; % Matrika Porabe (S)`;
-            const footerStr = `\n% IZRAČUN KONČNIH BILANC\nB = Z + sum(P, 1) - sum(S, 1);\nfprintf('\\n--- KONČNA STANJA (Obračun) ---\\n');\nfor i = 1:length(clani)\n    fprintf('%s: %.2f €\\n', clani{i}, B(i));\nend\nfprintf('\\n--- PREDLAGAN PORAČUN (Navodila za poravnavo) ---\\n');\nst_clanov = length(clani);\n[stanja, idx] = sort(B);\nupnik_kazalec = st_clanov;\ndolznik_kazalec = 1;\nwhile dolznik_kazalec < upnik_kazalec\n    if abs(stanja(dolznik_kazalec)) < 0.01, dolznik_kazalec = dolznik_kazalec + 1; continue; end\n    if abs(stanja(upnik_kazalec)) < 0.01, upnik_kazalec = upnik_kazalec - 1; continue; end\n    znesek = min(abs(stanja(dolznik_kazalec)), stanja(upnik_kazalec));\n    if znesek > 0\n        fprintf('%s -> %s: %.2f €\\n', clani{idx(dolznik_kazalec)}, clani{idx(upnik_kazalec)}, znesek);\n        stanja(dolznik_kazalec) = stanja(dolznik_kazalec) + znesek;\n        stanja(upnik_kazalec) = stanja(upnik_kazalec) - znesek;\n    end\n    if abs(stanja(dolznik_kazalec)) < 0.01, dolznik_kazalec = dolznik_kazalec + 1; end\n    if abs(stanja(upnik_kazalec)) < 0.01, upnik_kazalec = upnik_kazalec - 1; end\nend\n`;
-            return `${headerStr}\n${membersStr}\n\n${zStr}\n\n${pStr}\n\n${sStr}\n${footerStr}`; 
+          const adjustments = history.filter(e => e.type === 'adjustment');
+          const transactions = history.filter(e => e.type !== 'adjustment').reverse();
+          const headerStr = `clc;\nclear all;\n`;
+          const membersStr = `clani = {${members.map(m => `'${m}'`).join(', ')}};`;
+          const zVector = members.map(m => adjustments.reduce((s, e) => s + (e.user === m ? e.amount : 0), 0).toFixed(2)).join(', ');
+          const zStr = `Z = [${zVector}]; % Začetna stanja`;
+           
+          const pRows = transactions.length > 0 ? transactions.map(t => members.map(m => getMatrixValue(t, m, 'P').toFixed(2)).join(', ')) : [members.map(() => '0.00').join(', ')];
+          const pStr = `P = [\n  ${pRows.join(';\n   ')}\n]; % Matrika Plačil (P)`;
+           
+          const sRows = transactions.length > 0 ? transactions.map(t => members.map(m => getMatrixValue(t, m, 'S').toFixed(2)).join(', ')) : [members.map(() => '0.00').join(', ')];
+          const sStr = `S = [\n  ${sRows.join(';\n   ')}\n]; % Matrika Porabe (S)`;
+
+          const footerStr = `
+        % IZRAČUN KONČNIH BILANC
+        B = Z + sum(P, 1) - sum(S, 1);
+
+        fprintf('\\n--- KONČNA STANJA (Obračun) ---\\n');
+        for i = 1:length(clani)
+            fprintf('%s: %.2f €\\n', clani{i}, B(i));
+        end
+
+        fprintf('\\n--- PREDLAGAN PORAČUN (Navodila za poravnavo) ---\\n');
+        st_clanov = length(clani);
+        [stanja, idx] = sort(B); % Od največjega dolga do največjega upnika
+        upnik_kazalec = st_clanov;
+        dolznik_kazalec = 1;
+
+        while dolznik_kazalec < upnik_kazalec
+            if abs(stanja(dolznik_kazalec)) < 0.01
+                dolznik_kazalec = dolznik_kazalec + 1;
+                continue;
+            end
+            if abs(stanja(upnik_kazalec)) < 0.01
+                upnik_kazalec = upnik_kazalec - 1;
+                continue;
+            end
+            
+            znesek = min(abs(stanja(dolznik_kazalec)), stanja(upnik_kazalec));
+            if znesek > 0
+                fprintf('%s -> %s: %.2f €\\n', clani{idx(dolznik_kazalec)}, clani{idx(upnik_kazalec)}, znesek);
+                stanja(dolznik_kazalec) = stanja(dolznik_kazalec) + znesek;
+                stanja(upnik_kazalec) = stanja(upnik_kazalec) - znesek;
+            end
+            
+            if abs(stanja(dolznik_kazalec)) < 0.01, dolznik_kazalec = dolznik_kazalec + 1; end
+            if abs(stanja(upnik_kazalec)) < 0.01, upnik_kazalec = upnik_kazalec - 1; end
+        end
+        `;
+
+          return `${headerStr}\n${membersStr}\n\n${zStr}\n\n${pStr}\n\n${sStr}\n${footerStr}`; 
         };
+
+        // ==========================================
+        // 3. UI KOMPONENTE
+        // ==========================================
 
         const StatisticsModal = ({ show, onClose, history }) => {
-            const stats = React.useMemo(() => {
-                const transactions = history.filter(e => e.type !== 'adjustment');
-                if (transactions.length === 0) return null;
-                const totalSpend = transactions.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
-                const totalParticipations = transactions.reduce((sum, e) => sum + (e.participants?.length || 0), 0);
-                const avgLunch = totalParticipations > 0 ? totalSpend / totalParticipations : 0;
-                const maxReceipt = Math.max(...transactions.map(e => parseFloat(e.amount) || 0));
-                const bigSpender = transactions.find(e => parseFloat(e.amount) === maxReceipt)?.payer;
-                const dayNames = ["Nedelja", "Ponedeljek", "Torek", "Sreda", "Četrtek", "Petek", "Sobota"];
-                const daySums = [0, 0, 0, 0, 0, 0, 0];
-                transactions.forEach(e => { const day = new Date(e.date).getDay(); daySums[day] += (parseFloat(e.amount) || 0); });
-                const maxDayIdx = daySums.indexOf(Math.max(...daySums));
-                const milestones = [
-                    { val: 20, label: "Zaboj kave", icon: "☕" },
-                    { val: 50, label: "Nekaj pic za ekipo", icon: "🍕" },
-                    { val: 100, label: "Poln tank goriva", icon: "⛽" },
-                    { val: 250, label: "Pošteno večerjo s steak-i", icon: "🥩" },
-                    { val: 450, label: "Povratni let v New York", icon: "✈️" },
-                    { val: 650, label: "Najnovejši pametni telefon", icon: "📱" },
-                    { val: 850, label: "Gaming konzolo", icon: "🎮" },
-                    { val: 1050, label: "Vrhunsko gorsko kolo", icon: "🚲" },
-                    { val: 1300, label: "Električni skiro", icon: "🛴" },
-                    { val: 1500, label: "Rabljen avto (Golf 2 style)", icon: "🚗" }
-                ];
-                const currentMilestoneIdx = milestones.findIndex(m => totalSpend < m.val);
-                const progressMilestone = currentMilestoneIdx === -1 ? milestones[milestones.length-1] : milestones[currentMilestoneIdx];
-                const progressPercent = Math.min((totalSpend / 1500) * 100, 100);
-                return { totalSpend, avgLunch, maxReceipt, bigSpender, bestDay: dayNames[maxDayIdx], bestDayVal: daySums[maxDayIdx], progressPercent, progressMilestone, mealCount: transactions.length };
-            }, [history]);
-            if (!show) return null;
-            return (
-                <div className="fixed inset-0 bg-slate-900/90 z-[80] flex items-center justify-center p-4 backdrop-blur-md animate-fade-in no-print">
-                    <div className="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-                        <div className="p-6 bg-[#002f55] text-white flex justify-between items-center shrink-0">
-                            <h2 className="text-xl font-black flex items-center gap-2"><BarChart3 /> Statistika</h2>
-                            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X /></button>
-                        </div>
-                        <div className="p-6 overflow-y-auto custom-scrollbar space-y-6">
-                            {!stats ? <div className="text-center py-10 text-slate-400 italic">Ni dovolj podatkov.</div> : (
-                                <>
-                                    <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 text-center">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Skupna poraba ekipe</p>
-                                        <h3 className="text-3xl font-black text-[#002f55]">{stats.totalSpend.toFixed(2)} €</h3>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between items-end">
-                                            <span className="text-xs font-bold text-slate-700">Pojedli smo za...</span>
-                                            <span className="text-[10px] font-black text-[#002f55] bg-[#e4b00f] px-2 py-0.5 rounded uppercase">{stats.progressMilestone.label}</span>
-                                        </div>
-                                        <div className="h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-                                            <div className="h-full bg-gradient-to-r from-[#002f55] to-[#e4b00f] transition-all duration-1000" style={{ width: `${stats.progressPercent}%` }}></div>
-                                        </div>
-                                    </div>
-                                    <div className="bg-emerald-50 p-4 rounded-3xl border border-emerald-100 flex items-center gap-3">
-                                        <div className="bg-emerald-500 text-white p-2 rounded-2xl"><Calendar size={20} /></div>
-                                        <div><h4 className="text-xs font-black text-emerald-900 uppercase">Najdražji dan</h4><p className="text-sm font-bold text-emerald-700">{stats.bestDay} ({stats.bestDayVal.toFixed(0)} €)</p></div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3 text-center">
-                                        <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100"><p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Povprečna malica</p><p className="text-lg font-black text-[#002f55]">{stats.avgLunch.toFixed(2)} €</p></div>
-                                        <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100"><p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Število obrokov</p><p className="text-lg font-black text-[#002f55]">{stats.mealCount}</p></div>
-                                    </div>
-                                    <div className="p-4 bg-rose-50 rounded-3xl border border-rose-100 flex items-center gap-3">
-                                        <div className="bg-rose-500 text-white p-2 rounded-2xl"><TrendingDown size={20} /></div>
-                                        <div><h4 className="text-xs font-black text-rose-900 uppercase">Največji račun</h4><p className="text-sm font-bold text-rose-700">{stats.maxReceipt.toFixed(2)} € ({stats.bigSpender})</p></div>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                        <div className="p-6 bg-slate-50 shrink-0"><button onClick={onClose} className="w-full py-4 bg-[#002f55] text-white rounded-2xl font-black text-sm shadow-xl uppercase">Zapri</button></div>
-                    </div>
+          const stats = useMemo(() => {
+            const transactions = history.filter(e => e.type !== 'adjustment');
+            if (transactions.length === 0) return null;
+
+            const totalSpend = transactions.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+            const totalParticipations = transactions.reduce((sum, e) => sum + (e.participants?.length || 0), 0);
+            const avgLunch = totalParticipations > 0 ? totalSpend / totalParticipations : 0;
+            
+            const maxReceipt = Math.max(...transactions.map(e => parseFloat(e.amount) || 0));
+            const bigSpender = transactions.find(e => parseFloat(e.amount) === maxReceipt)?.payer;
+
+            const dayNames = ["Nedelja", "Ponedeljek", "Torek", "Sreda", "Četrtek", "Petek", "Sobota"];
+            const daySums = [0, 0, 0, 0, 0, 0, 0];
+            transactions.forEach(e => {
+              const day = new Date(e.date).getDay();
+              daySums[day] += (parseFloat(e.amount) || 0);
+            });
+            const maxDayIdx = daySums.indexOf(Math.max(...daySums));
+
+            const milestones = [
+              { val: 20, label: "Zaboj kave", icon: "☕" },
+              { val: 50, label: "Nekaj pic za ekipo", icon: "🍕" },
+              { val: 100, label: "Poln tank goriva", icon: "⛽" },
+              { val: 250, label: "Pošteno večerjo s steak-i", icon: "🥩" },
+              { val: 450, label: "Povratni let v New York", icon: "✈️" },
+              { val: 650, label: "Najnovejši pametni telefon", icon: "📱" },
+              { val: 850, label: "Gaming konzolo", icon: "🎮" },
+              { val: 1050, label: "Vrhunsko gorsko kolo", icon: "🚲" },
+              { val: 1300, label: "Električni skiro", icon: "🛴" },
+              { val: 1500, label: "Rabljen avto (Golf 2 style)", icon: "🚗" }
+            ];
+
+            const currentMilestoneIdx = milestones.findIndex(m => totalSpend < m.val);
+            const progressMilestone = currentMilestoneIdx === -1 ? milestones[milestones.length-1] : milestones[currentMilestoneIdx];
+            const progressPercent = Math.min((totalSpend / 1500) * 100, 100);
+
+            return { totalSpend, avgLunch, maxReceipt, bigSpender, bestDay: dayNames[maxDayIdx], bestDayVal: daySums[maxDayIdx], milestones, progressPercent, progressMilestone, mealCount: transactions.length };
+          }, [history]);
+
+          if (!show) return null;
+
+          return (
+            <div className="fixed inset-0 bg-slate-900/90 z-[80] flex items-center justify-center p-4 backdrop-blur-md animate-fade-in no-print">
+              <div className="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+                <div className="p-6 bg-[#002f55] text-white flex justify-between items-center shrink-0">
+                  <h2 className="text-xl font-black flex items-center gap-2"><BarChart3 /> Statistika</h2>
+                  <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X /></button>
                 </div>
-            );
+                
+                <div className="p-6 overflow-y-auto custom-scrollbar space-y-6">
+                  {!stats ? (
+                    <div className="text-center py-10 text-slate-400 italic">Ni dovolj podatkov za analizo.</div>
+                  ) : (
+                    <>
+                      <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 text-center">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Skupna poraba ekipe</p>
+                        <h3 className="text-3xl font-black text-[#002f55]">{stats.totalSpend.toFixed(2)} €</h3>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-end">
+                          <span className="text-xs font-bold text-slate-700">Skupaj smo pojedli za...</span>
+                          <span className="text-[10px] font-black text-[#002f55] bg-[#e4b00f] px-2 py-0.5 rounded uppercase">{stats.progressMilestone.label}</span>
+                        </div>
+                        <div className="h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                          <div className="h-full bg-gradient-to-r from-[#002f55] to-[#e4b00f] transition-all duration-1000" style={{ width: `${stats.progressPercent}%` }}></div>
+                        </div>
+                        <div className="flex justify-between text-[8px] font-bold text-slate-400 uppercase">
+                          <span>0 €</span>
+                          <span>750 €</span>
+                          <span>1500 €</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-emerald-50 p-4 rounded-3xl border border-emerald-100">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-emerald-500 text-white p-2 rounded-2xl"><Calendar size={20} /></div>
+                          <div>
+                            <h4 className="text-xs font-black text-emerald-900 uppercase">Najdražji dan</h4>
+                            <p className="text-sm font-bold text-emerald-700">{stats.bestDay} ({stats.bestDayVal.toFixed(0)} €)</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-center">
+                        <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                          <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Povprečna malica</p>
+                          <p className="text-lg font-black text-[#002f55]">{stats.avgLunch.toFixed(2)} €</p>
+                        </div>
+                        <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                          <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Število obrokov</p>
+                          <p className="text-lg font-black text-[#002f55]">{stats.mealCount}</p>
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-rose-50 rounded-3xl border border-rose-100 flex items-center gap-3">
+                        <div className="bg-rose-500 text-white p-2 rounded-2xl"><TrendingDown size={20} /></div>
+                        <div>
+                          <h4 className="text-xs font-black text-rose-900 uppercase">Največji račun</h4>
+                          <p className="text-sm font-bold text-rose-700">{stats.maxReceipt.toFixed(2)} € ({stats.bigSpender})</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="p-6 bg-slate-50 shrink-0">
+                  <button onClick={onClose} className="w-full py-4 bg-[#002f55] text-white rounded-2xl font-black text-sm shadow-xl">ZAPRI PREGLED</button>
+                </div>
+              </div>
+            </div>
+          );
         };
 
+        const AuthScreen = ({ inputCode, setInputCode, checkAccess, authError }) => (
+          <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-white font-sans">
+            <div className="max-w-xs w-full text-center space-y-8 animate-fade-in">
+              <div className="inline-flex p-4 bg-[#002f55] rounded-3xl shadow-2xl border-2 border-[#e4b00f]"><Lock size={48} className="text-white" /></div>
+              <h1 className="text-3xl font-black">Malica Manager</h1>
+              <div className="space-y-4">
+                <input type="password" value={inputCode} onChange={e => setInputCode(e.target.value)} onKeyDown={e => e.key === 'Enter' && checkAccess()} placeholder="••••" className="w-full bg-slate-800 border-2 border-slate-700 rounded-2xl py-4 text-center text-3xl font-bold tracking-[1em] outline-none focus:border-[#e4b00f] transition-all" autoFocus />
+                {authError && <p className="text-rose-500 text-xs font-bold animate-bounce">Napačna koda!</p>}
+                <button onClick={checkAccess} className="w-full bg-[#002f55] hover:bg-[#001f3f] py-4 rounded-2xl font-black text-lg shadow-xl shadow-[#002f55]/20 text-[#e4b00f]">ODKLENI</button>
+              </div>
+            </div>
+          </div>
+        );
+
+        const LoadingScreen = () => (
+          <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans text-slate-400">
+            <div className="text-center">
+              <RefreshCcw className="animate-spin mx-auto mb-2 text-[#002f55]" />
+              <p className="font-bold text-[#002f55]">Nalaganje...</p>
+            </div>
+          </div>
+        );
+
         const RouletteModal = ({ members, balances, show, onClose }) => {
-            const [currentName, setCurrentName] = React.useState("Kdo bo?");
-            const [isSpinning, setIsSpinning] = React.useState(false);
-            const [winner, setWinner] = React.useState(null);
-            React.useEffect(() => { if (show) { setWinner(null); setCurrentName("Pritisni START"); setIsSpinning(false); } }, [show]);
-            const selectWeightedWinner = () => {
-                const maxBal = Math.max(...Object.values(balances));
-                const weightedMembers = [];
-                members.forEach(m => { const bal = balances[m] || 0; const weight = Math.floor((maxBal - bal) + 10); for(let i=0; i<weight; i++) weightedMembers.push(m); });
-                return weightedMembers.length === 0 ? members[Math.floor(Math.random() * members.length)] : weightedMembers[Math.floor(Math.random() * weightedMembers.length)];
+          const [currentName, setCurrentName] = useState("Kdo bo?");
+          const [isSpinning, setIsSpinning] = useState(false);
+          const [winner, setWinner] = useState(null);
+
+          useEffect(() => {
+            if (show) {
+              setWinner(null);
+              setCurrentName("Pritisni START");
+              setIsSpinning(false);
+            }
+          }, [show]);
+
+          const selectWeightedWinner = () => {
+            const maxBal = Math.max(...Object.values(balances));
+            const weightedMembers = [];
+            members.forEach(m => {
+              const bal = balances[m] || 0;
+              const weight = Math.floor((maxBal - bal) + 10); 
+              for(let i=0; i<weight; i++) weightedMembers.push(m);
+            });
+            if (weightedMembers.length === 0) return members[Math.floor(Math.random() * members.length)];
+            return weightedMembers[Math.floor(Math.random() * weightedMembers.length)];
+          };
+
+          const startSpin = () => {
+            if (isSpinning) return;
+            setIsSpinning(true);
+            setWinner(null);
+            const finalWinner = selectWeightedWinner();
+            let speed = 50;
+            let counter = 0;
+            const maxSteps = 40; 
+            const spinInterval = () => {
+              const randomName = members[Math.floor(Math.random() * members.length)];
+              setCurrentName(randomName);
+              counter++;
+              if (counter < maxSteps) {
+                if (counter > maxSteps - 10) speed += 30;
+                setTimeout(spinInterval, speed);
+              } else {
+                setCurrentName(finalWinner);
+                setWinner(finalWinner);
+                setIsSpinning(false);
+              }
             };
-            const startSpin = () => {
-                if (isSpinning) return;
-                setIsSpinning(true); setWinner(null);
-                const finalWinner = selectWeightedWinner();
-                let speed = 50; let counter = 0; const maxSteps = 40; 
-                const spinInterval = () => {
-                    setCurrentName(members[Math.floor(Math.random() * members.length)]);
-                    counter++;
-                    if (counter < maxSteps) { if (counter > maxSteps - 10) speed += 30; setTimeout(spinInterval, speed); } 
-                    else { setCurrentName(finalWinner); setWinner(finalWinner); setIsSpinning(false); }
-                };
-                spinInterval();
-            };
-            if (!show) return null;
-            return (
-                <div className="fixed inset-0 bg-slate-900/90 z-[70] flex items-center justify-center p-6 backdrop-blur-md animate-fade-in no-print">
-                    <div className="w-full max-w-sm text-center relative">
-                        <button onClick={onClose} className="absolute -top-12 right-0 text-white/50 hover:text-white"><X size={32} /></button>
-                        <div className="mb-8"><Dices size={64} className={`mx-auto text-[#e4b00f] ${isSpinning ? 'animate-bounce' : ''}`} /><h2 className="text-2xl font-black text-white mt-4 uppercase tracking-widest">Kdo Plača?</h2><p className="text-white/50 text-xs">Utežen žreb: Večji dolg = Večja smola</p></div>
-                        <div className="bg-white rounded-3xl p-8 shadow-[0_0_50px_rgba(228,176,15,0.3)] border-4 border-[#e4b00f] relative overflow-hidden">
-                            <div className="h-24 flex items-center justify-center overflow-hidden"><div className={`text-4xl font-black text-[#002f55] transition-all ${winner ? 'scale-125' : ''}`}>{currentName}</div></div>
-                        </div>
-                        {!isSpinning && !winner && <button onClick={startSpin} className="mt-8 w-full bg-[#e4b00f] text-[#002f55] py-4 rounded-2xl font-black text-xl shadow-xl">ZAVRTI 🎲</button>}
-                        {winner && <div className="mt-8 space-y-3"><div className="text-white text-lg font-bold animate-bounce">🎊 {winner} častí! 🎊</div><button onClick={startSpin} className="w-full bg-[#002f55] border-2 border-[#e4b00f] text-[#e4b00f] py-3 rounded-xl font-bold uppercase">Ponovi</button></div>}
-                    </div>
+            spinInterval();
+          };
+
+          if (!show) return null;
+
+          return (
+            <div className="fixed inset-0 bg-slate-900/90 z-[70] flex items-center justify-center p-6 backdrop-blur-md animate-fade-in no-print">
+              <div className="w-full max-w-sm text-center relative">
+                <button onClick={onClose} className="absolute -top-12 right-0 text-white/50 hover:text-white"><X size={32} /></button>
+                <div className="mb-8">
+                  <Dices size={64} className={`mx-auto text-[#e4b00f] ${isSpinning ? 'animate-bounce' : ''}`} />
+                  <h2 className="text-2xl font-black text-white mt-4 uppercase tracking-widest">Kdo Plača?</h2>
+                  <p className="text-white/50 text-xs">Utežen žreb: Večji dolg = Večja smola</p>
                 </div>
-            );
+                <div className="bg-white rounded-3xl p-8 shadow-[0_0_50px_rgba(228,176,15,0.3)] border-4 border-[#e4b00f] relative overflow-hidden">
+                  <div className="h-24 flex items-center justify-center overflow-hidden">
+                     <div className={`text-4xl font-black text-[#002f55] transition-all ${winner ? 'scale-125' : ''}`}>
+                       {currentName}
+                     </div>
+                  </div>
+                  {winner && <div className="absolute inset-0 pointer-events-none flex items-center justify-center"><div className="w-full h-full bg-[#e4b00f]/10 animate-pulse"></div></div>}
+                </div>
+                {!isSpinning && !winner && <button onClick={startSpin} className="mt-8 w-full bg-[#e4b00f] text-[#002f55] py-4 rounded-2xl font-black text-xl shadow-xl hover:scale-105 transition-transform active:scale-95">ZAVRTI 🎲</button>}
+                {winner && <div className="mt-8 space-y-3"><div className="text-white text-lg font-bold animate-bounce">🎊 {winner} častí! 🎊</div><button onClick={startSpin} className="w-full bg-[#002f55] border-2 border-[#e4b00f] text-[#e4b00f] py-3 rounded-xl font-bold">Ponovi vajo</button></div>}
+              </div>
+            </div>
+          );
         };
 
         const AdminModal = ({ show, pin, setPin, error, pendingAction, onConfirm, onCancel }) => {
-            if (!show) return null;
-            const isEditing = pendingAction?.type === 'ADD' || pendingAction?.type === 'ADD_MEMBER';
-            const isBlur = pendingAction?.type === 'TOGGLE_BLUR';
-            return (
-                <div className="fixed inset-0 bg-slate-900/80 z-[60] flex items-center justify-center p-6 backdrop-blur-sm animate-fade-in no-print">
-                    <div className="bg-white p-6 rounded-3xl w-full max-w-xs shadow-2xl border-2 border-slate-100 text-center">
-                        <div className="flex justify-center mb-4"><div className="bg-[#002f55]/10 p-3 rounded-full text-[#002f55]"><Lock size={32} /></div></div>
-                        <h3 className="text-xl font-black text-slate-800 mb-2">Varnostna koda</h3>
-                        <p className="text-slate-500 text-xs mb-4">{isBlur ? 'Za preklop zasebnosti potrebuješ ADMIN PIN.' : (isEditing ? 'Potrebna koda za urejanje.' : 'Potreben administratorski PIN.')}</p>
-                        <input type="password" autoFocus value={pin} onChange={e => setPin(e.target.value)} onKeyDown={e => e.key === 'Enter' && onConfirm()} placeholder="••••" className="w-full bg-slate-100 border-2 border-slate-200 rounded-xl py-3 text-center text-2xl font-bold tracking-widest outline-none focus:border-[#e4b00f] mb-2" />
-                        {error && <p className="text-rose-500 text-xs font-bold mb-4 animate-bounce">Napačna koda!</p>}
-                        <div className="flex gap-2 mt-4"><button onClick={onCancel} className="flex-1 py-3 text-slate-400 font-bold bg-slate-50 rounded-xl">Prekliči</button><button onClick={onConfirm} className="flex-1 py-3 bg-[#002f55] text-white font-bold rounded-xl">Potrdi</button></div>
-                    </div>
-                </div>
-            );
+          if (!show) return null;
+          const isEditingAction = pendingAction?.type === 'ADD' || pendingAction?.type === 'ADD_MEMBER';
+          const isBlurToggle = pendingAction?.type === 'TOGGLE_BLUR';
+          return (
+            <div className="fixed inset-0 bg-slate-900/80 z-[60] flex items-center justify-center p-6 backdrop-blur-sm animate-fade-in no-print">
+              <div className="bg-white p-6 rounded-3xl w-full max-w-xs shadow-2xl border-2 border-slate-100 text-center">
+                <div className="flex justify-center mb-4"><div className="bg-[#002f55]/10 p-3 rounded-full text-[#002f55]"><Lock size={32} /></div></div>
+                <h3 className="text-xl font-black text-slate-800 mb-2">Varnostna koda</h3>
+                <p className="text-slate-500 text-xs mb-4">
+                  {isBlurToggle ? 'Za vklop/izklop zasebnosti potrebuješ ADMIN PIN.' : (isEditingAction ? 'Za to akcijo je potrebna koda za urejanje.' : 'Za to akcijo je potreben administratorski PIN.')}
+                </p>
+                <input type="password" autoFocus value={pin} onChange={e => setPin(e.target.value)} onKeyDown={e => e.key === 'Enter' && onConfirm()} placeholder="••••" className="w-full bg-slate-100 border-2 border-slate-200 rounded-xl py-3 text-center text-2xl font-bold tracking-widest outline-none focus:border-[#e4b00f] mb-2" />
+                {error && <p className="text-rose-500 text-xs font-bold mb-4 animate-bounce">Napačna koda!</p>}
+                <div className="flex gap-2 mt-4"><button onClick={onCancel} className="flex-1 py-3 text-slate-400 font-bold bg-slate-50 rounded-xl">Prekliči</button><button onClick={onConfirm} className="flex-1 py-3 bg-[#002f55] text-white font-bold rounded-xl shadow-lg">Potrdi</button></div>
+              </div>
+            </div>
+          );
         };
 
-        function App() {
-            const [user, setUser] = React.useState(null);
-            const [isAuthenticated, setIsAuthenticated] = React.useState(false);
-            const [inputCode, setInputCode] = React.useState('');
-            const [authError, setAuthError] = React.useState(false);
-            const [members, setMembers] = React.useState([]);
-            const [history, setHistory] = React.useState([]);
-            const [loading, setLoading] = React.useState(true);
-            const [globalSettings, setGlobalSettings] = React.useState({ isBlurred: false });
-            const [activeTab, setActiveTab] = React.useState('dashboard');
-            const [showAddMember, setShowAddMember] = React.useState(false);
-            const [newMemberName, setNewMemberName] = React.useState('');
-            const [showResetConfirm, setShowResetConfirm] = React.useState(false);
-            const [entryToDelete, setEntryToDelete] = React.useState(null);
-            const [showAdminAuth, setShowAdminAuth] = React.useState(false);
-            const [adminPinInput, setAdminPinInput] = React.useState('');
-            const [pendingAction, setPendingAction] = React.useState(null);
-            const [adminAuthError, setAdminAuthError] = React.useState(false);
-            const [isResetting, setIsResetting] = React.useState(false);
-            const [matrixType, setMatrixType] = React.useState('P');
-            const [manualStartBalances, setManualStartBalances] = React.useState({});
-            const [amount, setAmount] = React.useState('');
-            const [payer, setPayer] = React.useState('');
-            const [selectedParticipants, setSelectedParticipants] = React.useState([]);
-            const [date, setDate] = React.useState(new Date().toISOString().split('T')[0]);
-            const [splitType, setSplitType] = React.useState('equal');
-            const [manualAmounts, setManualAmounts] = React.useState({});
-            const [showRoulette, setShowRoulette] = React.useState(false);
-            const [showStats, setShowStats] = React.useState(false);
+        const DeleteConfirmModal = ({ entry, onConfirm, onCancel }) => {
+          if (!entry) return null;
+          return (
+            <div className="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-6 backdrop-blur-sm animate-fade-in no-print">
+              <div className="bg-white p-6 rounded-3xl w-full max-w-sm shadow-2xl border-2 border-slate-100">
+                <div className="flex justify-center mb-4"><div className="bg-rose-100 p-3 rounded-full text-rose-500"><Trash2 size={32} /></div></div>
+                <h3 className="text-xl font-black text-center text-slate-800 mb-2">Izbrišem vnos?</h3>
+                <p className="text-center text-slate-500 mb-6 text-sm">Tega dejanja ni mogoče razveljaviti.</p>
+                <div className="flex gap-3"><button onClick={onCancel} className="flex-1 py-3 font-bold text-slate-500 bg-slate-100 rounded-xl hover:bg-slate-200">Prekliči</button><button onClick={onConfirm} className="flex-1 py-3 font-bold text-white bg-rose-500 rounded-xl hover:bg-rose-600 shadow-lg shadow-rose-200">Izbriši</button></div>
+              </div>
+            </div>
+          );
+        };
 
-            React.useEffect(() => {
-                const initAuth = async () => { try { await signInAnonymously(auth); } catch (e) { console.error(e); } };
-                initAuth();
-                return onAuthStateChanged(auth, setUser);
-            }, []);
+        const PrintReport = ({ history, members, balances, settlements }) => (
+          <div className="print-container p-8">
+            <div className="text-center border-b-2 border-slate-800 pb-4 mb-6">
+              <h1 className="text-2xl font-black uppercase tracking-tight">Poročilo Malica Manager</h1>
+              <p className="text-xs text-slate-500">Ustvarjeno: {new Date().toLocaleString('sl-SI')}</p>
+            </div>
+            {history.some(e => e.type === 'adjustment') && (
+              <div className="mb-6 avoid-break"><h3 className="font-bold text-sm mb-2 uppercase border-b border-slate-200">1. Začetna Stanja</h3><div className="grid grid-cols-4 gap-2">{history.filter(e => e.type === 'adjustment').map(e => (<div key={e.id} className="border p-2 text-xs flex justify-between rounded bg-slate-50"><span>{e.user}</span> <span className="font-bold">{e.amount.toFixed(2)} €</span></div>))}</div></div>
+            )}
+            <div className="mb-6 avoid-break"><h3 className="font-bold text-sm mb-2 uppercase border-b border-slate-200">2. Povzetek Obdobja</h3><table className="w-full text-xs report-table"><thead><tr className="bg-slate-100"><th>Član</th><th className="text-right">Vplačila (P)</th><th className="text-right">Poraba (S)</th><th className="text-right">Neto Stanje</th></tr></thead><tbody>{members.map(m => {const pTot = history.reduce((sum, e) => { if (e.type === 'adjustment') return sum; return sum + (e.payer === m ? (parseFloat(e.amount) || 0) : 0) }, 0); const sTot = history.reduce((sum, e) => { if (e.type === 'adjustment') return sum; return sum + getMatrixValue(e, m, 'S') }, 0); const bal = balances[m] || 0; return (<tr key={m}><td className="font-bold">{m}</td><td className="text-right">{pTot.toFixed(2)} €</td><td className="text-right">{sTot.toFixed(2)} €</td><td className={`text-right font-bold ${bal >= 0 ? 'text-green-700' : 'text-red-700'}`}>{bal >= 0 ? '+' : ''}{bal.toFixed(2)} €</td></tr>)})}</tbody></table></div>
+            <div className="mb-6 avoid-break"><h3 className="font-bold text-sm mb-2 uppercase border-b border-slate-200">3. Predlagan Poračun</h3>{settlements.length > 0 ? (<div className="grid grid-cols-2 gap-4">{settlements.map((s, i) => (<div key={i} className="border p-2 text-xs flex justify-between items-center bg-slate-50 rounded"><span className="font-medium">{s.from} &rarr; {s.to}</span> <span className="font-black bg-slate-900 text-white px-2 py-0.5 rounded">{s.amount.toFixed(2)} €</span></div>))}</div>) : <p className="italic text-slate-500 text-xs">Vse poravnano.</p>}</div>
+            <div className="mb-6"><h3 className="font-bold text-sm mb-3 uppercase tracking-wider border-b pb-1">4. Transakcije</h3><table className="w-full text-[9px] report-table"><thead><tr className="bg-slate-100"><th className="w-16">Datum</th><th>Opis</th><th className="w-12 text-right">Znesek</th>{members.map(m => <th key={m} className="text-center w-6">{m.substring(0, 2)}</th>)}</tr></thead><tbody>{history.filter(e => e.type !== 'adjustment').map(e => (<tr key={e.id} className="avoid-break"><td>{new Date(e.date).toLocaleDateString('sl-SI')}</td><td className="truncate max-w-[100px]">{e.opis}</td><td className="text-right font-bold">{e.amount.toFixed(2)}</td>{members.map(m => {const p = getMatrixValue(e, m, 'P'); const s = getMatrixValue(e, m, 'S'); return (<td key={m} className="text-center">{p > 0 && <div className="text-emerald-600 font-bold">{Math.round(p)}</div>}{s > 0 && <div className="text-rose-400">-{Math.round(s)}</div>}</td>)})}</tr>))}</tbody></table></div>
+            <div className="avoid-break page-break"><h3 className="font-bold text-sm mb-3 uppercase tracking-wider border-b pb-1">5. Matlab Izvoz</h3><p className="text-[9px] text-slate-500 mb-2">Kopirajte spodnjo kodo in jo prilepite neposredno v Matlab za nadaljnjo analizo.</p><div className="code-block">{getMatlabCode(history, members)}</div></div>
+          </div>
+        );
 
-            React.useEffect(() => {
-                if (!user) return;
-                const membersRef = collection(db, 'artifacts', appId, 'public', 'data', 'members');
-                const historyRef = collection(db, 'artifacts', appId, 'public', 'data', 'history');
-                const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
+        const Navigation = ({ activeTab, setActiveTab }) => (
+          <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-2 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)] print:hidden z-50">
+            <div className="max-w-md mx-auto flex justify-between items-center">
+              <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center p-2 rounded-xl ${activeTab === 'dashboard' ? 'text-[#002f55]' : 'text-slate-400'}`}><TrendingDown size={22} /><span className="text-[10px] mt-1 font-bold">Stanje</span></button>
+              <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center p-2 rounded-xl ${activeTab === 'history' ? 'text-[#002f55]' : 'text-slate-400'}`}><History size={22} /><span className="text-[10px] mt-1 font-bold">Zgodovina</span></button>
+              <div className="relative -top-8"><button onClick={() => setActiveTab('add')} className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl ${activeTab === 'add' ? 'bg-[#002f55] border-[#e4b00f]' : 'bg-[#002f55] border-white'} border-4 text-[#e4b00f] active:scale-90 transition-all`}><PlusCircle size={32} /></button></div>
+              <button onClick={() => setActiveTab('settle')} className={`flex flex-col items-center p-2 rounded-xl ${activeTab === 'settle' ? 'text-[#002f55]' : 'text-slate-400'}`}><Calculator size={22} /><span className="text-[10px] mt-1 font-bold">Obračun</span></button>
+              <button onClick={() => setActiveTab('settings')} className={`flex flex-col items-center p-2 rounded-xl ${activeTab === 'settings' ? 'text-[#002f55]' : 'text-slate-400'}`}><Users size={22} /><span className="text-[10px] mt-1 font-bold">Ekipa</span></button>
+            </div>
+          </nav>
+        );
 
-                const unsubSettings = onSnapshot(settingsRef, (docSnap) => { if (docSnap.exists()) setGlobalSettings(docSnap.data()); else setDoc(settingsRef, { isBlurred: false }); });
-                const unsubMembers = onSnapshot(membersRef, (snapshot) => {
-                    const mList = snapshot.docs.map(doc => doc.data().name);
-                    if (mList.length === 0 && loading) {
-                        const defaults = ["Martin", "Mitja", "Pavel", "Matej", "Zala", "Stela"];
-                        defaults.forEach(n => setDoc(doc(membersRef, n), { name: n }));
-                    } else setMembers(mList);
-                });
-                const unsubHistory = onSnapshot(historyRef, (snapshot) => {
-                    const hList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    hList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                    setHistory(hList); setLoading(false);
-                });
-                return () => { unsubMembers(); unsubHistory(); unsubSettings(); };
-            }, [user]);
+        // ==========================================
+        // 4. ZAVIHKI
+        // ==========================================
 
-            // KIRURŠKI POPRAVEK: Avtomatska izbira vseh se zgodi le ob prvem nalaganju
-            React.useEffect(() => { 
-                if (members.length > 0) { 
-                    if (!payer || !members.includes(payer)) setPayer(members[0]); 
-                    if (selectedParticipants.length === 0 && loading) setSelectedParticipants([...members]); 
-                } 
-            }, [members, loading]);
+        const TabDashboard = ({ payerRanking, balances, setActiveTab, titles, onOpenRoulette, isBlurred, onToggleBlur, onOpenStats }) => (
+          <div className="space-y-6 animate-fade-in">
+            <div className="bg-white p-6 rounded-3xl shadow-lg border border-white text-center relative">
+              <button 
+                onClick={onToggleBlur}
+                className="absolute top-4 right-4 text-slate-300 hover:text-[#002f55] transition-colors p-2"
+                title="Admin: Preklopi zasebnost"
+              >
+                {isBlurred ? <Eye size={18} /> : <EyeOff size={18} />}
+              </button>
 
-            const balances = React.useMemo(() => {
-                const b = {}; members.forEach(m => b[m] = 0);
-                history.forEach(entry => {
-                    if (entry.user && !b.hasOwnProperty(entry.user)) b[entry.user] = 0;
-                    if (entry.payer && !b.hasOwnProperty(entry.payer)) b[entry.payer] = 0;
-                    if (entry.participants) entry.participants.forEach(p => { if (!b.hasOwnProperty(p)) b[p] = 0; });
-                });
-                history.forEach(entry => {
-                    if (entry.type === 'adjustment') { b[entry.user] = money((b[entry.user] || 0) + entry.amount); return; }
-                    const numAmount = parseFloat(entry.amount) || 0;
-                    if (b.hasOwnProperty(entry.payer)) b[entry.payer] += numAmount;
-                    if (entry.splitType === 'manual' && entry.manualAmounts) { Object.entries(entry.manualAmounts).forEach(([n, c]) => { if (b.hasOwnProperty(n)) b[n] -= (parseFloat(c) || 0); }); } 
-                    else if (entry.participants) { const cp = numAmount / entry.participants.length; entry.participants.forEach(p => { if (b.hasOwnProperty(p)) b[p] -= cp; }); }
-                });
-                Object.keys(b).forEach(k => b[k] = money(b[k])); return b;
-            }, [history, members]);
-
-            const payerRanking = React.useMemo(() => [...members].sort((a, b) => (balances[a] || 0) - (balances[b] || 0)), [members, balances]);
-            const titles = React.useMemo(() => calculateTitles(members, balances, history), [members, balances, history]);
-
-            const isManualBalanced = React.useMemo(() => money(Object.values(manualAmounts).reduce((a, b) => a + (parseFloat(b) || 0), 0)) === money(parseFloat(amount) || 0), [manualAmounts, amount]);
-
-            const verifyAdminPin = async () => {
-                const pin = adminPinInput; const act = pendingAction?.type; let ok = false;
-                if ((act === 'DELETE' || act === 'RESET' || act === 'TOGGLE_BLUR') && pin === ADMIN_PIN) ok = true;
-                else if ((act === 'ADD' || act === 'ADD_MEMBER') && (pin === EDIT_CODE || pin === ADMIN_PIN)) ok = true;
-                if (ok) {
-                    setShowAdminAuth(false);
-                    if (act === 'DELETE') await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'history', pendingAction.payload));
-                    else if (act === 'RESET') { const init = {}; members.forEach(m => init[m] = 0); setManualStartBalances(init); setShowResetConfirm(true); }
-                    else if (act === 'ADD') {
-                        const data = { date, payer, amount: parseFloat(amount), participants: [...selectedParticipants], splitType, timestamp: Date.now(), opis: document.getElementById('opis-input')?.value || 'Malica' };
-                        if (splitType === 'manual') data.manualAmounts = { ...manualAmounts };
-                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'history'), data); setAmount(''); setManualAmounts({}); setActiveTab('history');
-                    }
-                    else if (act === 'ADD_MEMBER') { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', newMemberName.trim()), { name: newMemberName.trim() }); setNewMemberName(''); setShowAddMember(false); }
-                    else if (act === 'TOGGLE_BLUR') await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), { isBlurred: !globalSettings.isBlurred });
-                    setPendingAction(null);
-                } else setAdminAuthError(true);
-            };
-
-            const finalizeReset = async () => {
-                setIsResetting(true);
-                const hRef = collection(db, 'artifacts', appId, 'public', 'data', 'history');
-                const snap = await getDocs(hRef); const batch = writeBatch(db);
-                snap.docs.forEach(d => batch.delete(d.ref));
-                for (const [n, v] of Object.entries(manualStartBalances)) {
-                    if (Math.abs(parseFloat(v)) < 0.01) continue;
-                    batch.set(doc(hRef), { type: 'adjustment', user: n, amount: parseFloat(v), timestamp: Date.now(), date: new Date().toISOString().split('T')[0], opis: 'Začetno stanje' });
-                }
-                await batch.commit(); setIsResetting(false); setShowResetConfirm(false); setActiveTab('dashboard');
-            };
-
-            if (!isAuthenticated) return (
-                <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-white"><div className="max-w-xs w-full text-center space-y-8 animate-fade-in"><div className="inline-flex p-4 bg-[#002f55] rounded-3xl border-2 border-[#e4b00f]"><Lock size={48} /></div><h1 className="text-3xl font-black">Malica Manager</h1><div className="space-y-4"><input type="password" value={inputCode} onChange={e => setInputCode(e.target.value)} onKeyDown={e => e.key === 'Enter' && (inputCode === ACCESS_CODE ? setIsAuthenticated(true) : setAuthError(true))} placeholder="••••" className="w-full bg-slate-800 border-2 border-slate-700 rounded-2xl py-4 text-center text-3xl font-bold tracking-[1em] outline-none" /><button onClick={() => inputCode === ACCESS_CODE ? setIsAuthenticated(true) : setAuthError(true)} className="w-full bg-[#002f55] text-[#e4b00f] py-4 rounded-2xl font-black">ODKLENI</button></div></div></div>
-            );
-            if (loading) return <div className="min-h-screen flex items-center justify-center"><RefreshCcw className="animate-spin text-[#002f55]" /></div>;
-
-            return (
-                <div className="min-h-screen bg-slate-50 pb-24 font-sans app-container">
-                    <AdminModal show={showAdminAuth} pin={adminPinInput} setPin={setAdminPinInput} error={adminAuthError} pendingAction={pendingAction} onConfirm={verifyAdminPin} onCancel={() => setShowAdminAuth(false)} />
-                    <StatisticsModal show={showStats} onClose={() => setShowStats(false)} history={history} />
-                    <RouletteModal members={members} balances={balances} show={showRoulette} onClose={() => setShowRoulette(false)} />
-                    
-                    <header className="bg-[#002f55] text-white p-6 rounded-b-[2.5rem] shadow-xl mb-6 text-center no-print">
-                        <h1 className="text-2xl font-bold flex items-center justify-center gap-2"><Wallet className="text-[#e4b00f]" /> Malica Manager</h1>
-                    </header>
-
-                    <main className="max-w-md mx-auto px-4 no-print">
-                        {activeTab === 'dashboard' && (
-                            <div className="space-y-6 animate-fade-in">
-                                <div className="bg-white p-6 rounded-3xl shadow-lg text-center relative border border-white">
-                                    <button onClick={() => { setPendingAction({type:'TOGGLE_BLUR'}); setAdminPinInput(''); setShowAdminAuth(true); }} className="absolute top-4 right-4 text-slate-300 hover:text-[#002f55]"><Eye size={18} /></button>
-                                    <p className="text-slate-400 text-xs font-bold uppercase mb-2">Naslednji plača</p>
-                                    <h2 className={`text-4xl font-black text-[#002f55] mb-2 ${globalSettings.isBlurred ? 'blur-lg select-none' : ''}`}>{payerRanking[0] || "Dodaj člana"}</h2>
-                                    <div className={`inline-flex items-center gap-2 bg-[#002f55]/5 px-4 py-1.5 rounded-full text-sm font-bold ${globalSettings.isBlurred ? 'blur-md' : ''}`}>Bilanca: {balances[payerRanking[0]]?.toFixed(2)} €</div>
-                                </div>
-                                <div className="bg-white rounded-3xl shadow-sm overflow-hidden">
-                                    <div className="p-4 border-b bg-slate-50 flex items-center gap-2"><ListOrdered size={18} /> Vrstni red</div>
-                                    <div className={`divide-y ${globalSettings.isBlurred ? 'blur-lg select-none' : ''}`}>
-                                        {payerRanking.map((m, i) => (<div key={m} className="p-4 flex justify-between items-center"><div className="flex items-center gap-3"><span className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold">{i+1}</span><span className="font-bold">{m}</span></div><span className={`font-bold ${balances[m]>=0?'text-emerald-600':'text-rose-500'}`}>{balances[m].toFixed(2)} €</span></div>))}
-                                    </div>
-                                </div>
-                                <button onClick={() => setShowRoulette(true)} className="w-full py-4 bg-[#e4b00f] text-[#002f55] font-black text-lg rounded-2xl flex items-center justify-center gap-2 shadow-lg">Dices Kdo Plača? 🎲</button>
-                                <div className="grid grid-cols-2 gap-3"><button onClick={() => setShowStats(true)} className="w-full py-3 bg-[#002f55]/5 text-[#002f55] font-bold rounded-2xl flex items-center justify-center gap-2 border border-[#002f55]/10"><BarChart3 size={18} /> Statistika</button><button onClick={() => setActiveTab('matrix')} className="w-full bg-[#002f55] text-white py-3 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg"><Grid size={18} /> Matrike</button></div>
-                            </div>
-                        )}
-                        {activeTab === 'add' && (
-                            <div className="bg-white p-6 rounded-3xl shadow-sm border space-y-6">
-                                <h3 className="text-xl font-bold flex items-center gap-2"><PlusCircle className="text-[#002f55]" /> Nov račun</h3>
-                                <form onSubmit={e => { e.preventDefault(); setPendingAction({type:'ADD'}); setAdminPinInput(''); setShowAdminAuth(true); }} className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <input type="text" id="opis-input" placeholder="Opis..." className="w-full p-3 bg-slate-50 rounded-xl outline-none" required />
-                                        <input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Znesek €" className="w-full p-3 bg-slate-50 rounded-xl font-bold outline-none" required />
-                                    </div>
-                                    <select value={payer} onChange={e => setPayer(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl font-bold text-[#002f55] outline-none">{members.map(m => <option key={m} value={m}>{m}</option>)}</select>
-                                    
-                                    {/* KIRURŠKO DODAN GUMB VSI IN MANUAL LOGIKA */}
-                                    <div className="flex bg-slate-100 p-1 rounded-2xl gap-1">
-                                        <button type="button" onClick={() => setSplitType('equal')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${splitType === 'equal' ? 'bg-white shadow-sm text-[#002f55]' : 'text-slate-400'}`}>Enakomerno</button>
-                                        <button type="button" onClick={() => setSplitType('manual')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${splitType === 'manual' ? 'bg-white shadow-sm text-[#002f55]' : 'text-slate-400'}`}>Po porabi</button>
-                                    </div>
-
-                                    <div className="flex justify-end px-1">
-                                        <button type="button" onClick={() => setSelectedParticipants(selectedParticipants.length === members.length ? [] : [...members])} className="text-xs font-bold text-[#002f55] flex items-center gap-2 py-2">
-                                            {selectedParticipants.length === members.length ? <CheckSquare size={18} /> : <Square size={18} />}
-                                            <span className="uppercase tracking-wider">Vsi</span>
-                                        </button>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        {members.map(m => {
-                                            const sel = selectedParticipants.includes(m);
-                                            return (
-                                                <div key={m} onClick={() => setSelectedParticipants(p => p.includes(m) ? p.filter(x => x !== m) : [...p, m])} className={`p-3 rounded-xl border transition-all flex items-center gap-3 cursor-pointer ${sel ? 'bg-[#002f55]/5 border-[#002f55]/20' : 'opacity-40'}`}>
-                                                    <span className="flex-1 text-sm font-bold">{m}</span>
-                                                    {splitType === 'manual' && sel ? (
-                                                        <input type="number" step="0.01" placeholder="0.00" value={manualAmounts[m] || ''} onChange={e => { e.stopPropagation(); setManualAmounts({...manualAmounts, [m]: e.target.value}); }} className="w-20 p-1 bg-white border rounded text-right text-xs font-bold" />
-                                                    ) : (sel && <CheckCircle2 size={16} className="text-[#002f55]" />)}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                    {splitType === 'manual' && (
-                                        <div className={`p-3 rounded-xl text-center text-xs font-bold ${isManualBalanced ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                                            Vsota: {Object.values(manualAmounts).reduce((a, b) => a + (parseFloat(b) || 0), 0).toFixed(2)} € / {parseFloat(amount || 0).toFixed(2)} €
-                                        </div>
-                                    )}
-                                    <button type="submit" disabled={!amount || selectedParticipants.length === 0 || (splitType === 'manual' && !isManualBalanced)} className="w-full bg-[#002f55] text-white py-4 rounded-2xl font-black shadow-xl uppercase disabled:opacity-30">Shrani račun</button>
-                                </form>
-                            </div>
-                        )}
-                        {activeTab === 'history' && (
-                            <div className="space-y-4 animate-fade-in"><h3 className="text-xl font-bold flex items-center gap-2 px-2"><History className="text-[#002f55]" /> Zgodovina</h3><div className="space-y-3">{history.map(e => { const isAdj = e.type === 'adjustment'; return (<div key={e.id} className="bg-white p-4 rounded-2xl shadow-sm border flex justify-between items-start"><div className="flex gap-3"><div className="bg-slate-50 w-10 h-10 rounded-xl flex items-center justify-center flex-col text-slate-400 font-bold text-[8px] uppercase">{new Date(e.date).getDate()}<span>{new Date(e.date).toLocaleString('sl', {month:'short'})}</span></div><div><p className="text-sm font-bold text-slate-700">{isAdj?e.user:e.payer} <span className="text-xs font-normal text-slate-400">{isAdj?'prenos stanja':'je plačal/a'}</span></p><span className="text-[10px] text-slate-500">{e.opis}</span></div></div><div className="text-right"><p className="font-black text-slate-800">{e.amount.toFixed(2)} €</p><button onClick={() => { setPendingAction({type:'DELETE', payload:e.id}); setAdminPinInput(''); setShowAdminAuth(true); }} className="text-rose-200 mt-1"><Trash2 size={16} /></button></div></div>); })}</div></div>
-                        )}
-                    </main>
-
-                    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t px-6 py-2 pb-safe shadow-2xl no-print z-50">
-                        <div className="max-w-md mx-auto flex justify-between items-center">
-                            <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center p-2 ${activeTab==='dashboard'?'text-[#002f55]':'text-slate-400'}`}><TrendingDown size={22} /><span className="text-[10px] mt-1 font-bold">Stanje</span></button>
-                            <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center p-2 ${activeTab==='history'?'text-[#002f55]':'text-slate-400'}`}><History size={22} /><span className="text-[10px] mt-1 font-bold">Zgodovina</span></button>
-                            <div className="relative -top-8"><button onClick={() => setActiveTab('add')} className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl bg-[#002f55] border-4 border-white text-[#e4b00f]`}><PlusCircle size={32} /></button></div>
-                            <button onClick={() => window.print()} className="flex flex-col items-center p-2 text-slate-400"><Printer size={22} /><span className="text-[10px] mt-1 font-bold">Izvozi</span></button>
-                            <button onClick={() => setActiveTab('dashboard')} className="flex flex-col items-center p-2 text-slate-400"><Users size={22} /><span className="text-[10px] mt-1 font-bold">Ekipa</span></button>
-                        </div>
-                    </nav>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Naslednji plača</p>
+              <h2 className={`text-4xl font-black text-[#002f55] mb-2 transition-all duration-500 ${isBlurred ? 'blur-lg select-none' : ''}`}>
+                {payerRanking[0] || "Dodaj člana"}
+              </h2>
+              {payerRanking[0] && (
+                <div className={`inline-flex items-center gap-2 bg-[#002f55]/5 px-4 py-1.5 rounded-full text-sm font-bold text-slate-600 transition-all duration-500 ${isBlurred ? 'blur-md select-none' : ''}`}>
+                  Bilanca: {balances[payerRanking[0]]?.toFixed(2)} €
                 </div>
-            );
+              )}
+            </div>
+
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="p-5 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
+                <h3 className="font-bold text-slate-700 flex items-center gap-2"><ListOrdered size={18} className="text-[#002f55]" /> Vrstni red</h3>
+              </div>
+              <div className={`divide-y divide-slate-50 transition-all duration-500 ${isBlurred ? 'blur-lg select-none' : ''}`}>
+                {payerRanking.map((m, idx) => {
+                  const memberTitles = titles[m] || []; 
+                  return (
+                    <div key={m} className={`p-4 flex justify-between items-center ${idx === 0 ? 'bg-[#002f55]/10' : ''}`}>
+                      <div className="flex items-center gap-3">
+                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black ${idx === 0 ? 'bg-[#002f55] text-[#e4b00f]' : 'bg-slate-100 text-slate-400'}`}>{idx + 1}</span>
+                        <div className="flex flex-col"><span className="font-bold text-slate-700">{m}</span>{memberTitles.length > 0 && (<div className="flex flex-wrap gap-1 mt-0.5">{memberTitles.map((t, i) => (<div key={i} className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide border ${t.bg} ${t.color}`}><t.icon size={10} /> {t.label}</div>))}</div>)}</div>
+                      </div>
+                      <span className={`font-bold tabular-nums ${balances[m] >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>{balances[m] >= 0 ? '+' : ''}{balances[m].toFixed(2)} €</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+             
+            <button onClick={onOpenRoulette} className="w-full py-4 bg-[#e4b00f] text-[#002f55] font-black text-lg rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#e4b00f]/20 hover:scale-[1.02] transition-transform active:scale-95"><Dices size={24} /> Kdo Plača? 🎲</button>
+             
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={onOpenStats} className="w-full py-3 bg-[#002f55]/5 text-[#002f55] font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-[#002f55]/10 transition-all border border-[#002f55]/10"><BarChart3 size={18} /> Statistika</button>
+              <button onClick={() => setActiveTab('matrix')} className="w-full bg-[#002f55] text-white py-3 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg hover:bg-[#001f3f] transition-all"><Grid size={18} /> Matrike</button>
+            </div>
+          </div>
+        );
+
+        const TabMatrix = ({ members, history, matrixType, setMatrixType, onPrint }) => (
+          <div className="space-y-4 animate-fade-in">
+            <div className="flex justify-between items-center px-1"><h3 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Grid className="text-[#002f55]" /> Matrike</h3><div className="flex bg-slate-200 p-1 rounded-lg"><button onClick={() => setMatrixType('P')} className={`px-4 py-1 rounded-md text-xs font-bold transition-all ${matrixType === 'P' ? 'bg-[#002f55] shadow text-white' : 'text-slate-500'}`}>Plačila</button><button onClick={() => setMatrixType('S')} className={`px-4 py-1 rounded-md text-xs font-bold transition-all ${matrixType === 'S' ? 'bg-[#002f55] shadow text-white' : 'text-slate-500'}`}>Poraba</button><button onClick={() => setMatrixType('Z')} className={`px-4 py-1 rounded-md text-xs font-bold transition-all ${matrixType === 'Z' ? 'bg-[#002f55] shadow text-white' : 'text-slate-500'}`}>Začetno</button></div></div>
+            <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-100 overflow-hidden"><div className="overflow-x-auto custom-scrollbar pb-2"><table className="w-full text-xs whitespace-nowrap"><thead><tr className="border-b border-slate-100 bg-slate-50/50"><th className="p-3 text-left font-bold text-slate-400">Datum</th>{members.map(m => (<th key={m} className="p-3 text-right font-bold text-slate-600">{m.substring(0, 3)}</th>))}<th className="p-3 text-right font-black text-slate-800">Σ</th></tr></thead><tbody>{matrixType === 'Z' && (() => { const adjustments = history.filter(e => e.type === 'adjustment'); const rowSum = members.reduce((sum, m) => sum + adjustments.reduce((s, e) => s + (e.user === m ? e.amount : 0), 0), 0); return (<tr className="border-b-2 border-[#002f55]/20 bg-[#002f55]/5 text-xs"><td className="p-3 font-bold text-[#002f55] border-r border-[#002f55]/20">Začetno stanje <span className="block text-[9px] font-normal text-[#002f55]/60">Prenos</span></td>{members.map(m => { const val = adjustments.reduce((s, e) => s + (e.user === m ? e.amount : 0), 0); return (<td key={m} className={`p-3 text-right tabular-nums ${val !== 0 ? (val >= 0 ? 'text-emerald-600' : 'text-rose-500') : 'text-slate-400'}`}>{val !== 0 ? (val > 0 ? '+' : '') + val.toFixed(1) : '0.0'}</td>); })}<td className="p-3 text-right font-black text-[#002f55] bg-[#002f55]/10">{rowSum !== 0 ? (rowSum > 0 ? '+' : '') + rowSum.toFixed(1) : '0.0'}</td></tr>); })()}{history.map(entry => { if (matrixType === 'Z' || (matrixType !== 'Z' && entry.type === 'adjustment')) return null; const rowSum = members.reduce((sum, m) => sum + getMatrixValue(entry, m, matrixType), 0); return (<tr key={entry.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors"><td className="p-3 text-slate-500 font-medium border-r border-slate-50">{new Date(entry.date).toLocaleDateString('sl-SI', { day: 'numeric', month: 'numeric' })} <span className="text-[9px] text-slate-300 ml-1">{entry.opis.substring(0, 8)}</span></td>{members.map(m => { const val = getMatrixValue(entry, m, matrixType); return (<td key={m} className={`p-3 text-right tabular-nums ${val !== 0 ? (matrixType === 'S' ? 'text-rose-500' : (matrixType === 'Z' ? (val > 0 ? 'text-emerald-600' : 'text-rose-500') : 'text-[#002f55] font-bold')) : 'text-slate-200'}`}>{val !== 0 ? val.toFixed(1) : '-'}</td>) })}<td className="p-3 text-right font-bold text-slate-800 bg-slate-50/30">{rowSum.toFixed(1)}</td></tr>) })}</tbody><tfoot><tr className="bg-slate-100 font-black text-slate-700"><td className="p-3">SKUPAJ</td>{members.map(m => { const colSum = history.reduce((sum, e) => { if (matrixType === 'Z') return sum + (e.type === 'adjustment' && e.user === m ? (parseFloat(e.amount) || 0) : 0); return e.type === 'adjustment' ? sum : sum + getMatrixValue(e, m, matrixType); }, 0); return <td key={m} className="p-3 text-right">{colSum.toFixed(1)}</td> })}<td className="p-3 text-right">{history.reduce((tot, e) => { if ((matrixType === 'Z' && e.type !== 'adjustment') || (matrixType !== 'Z' && e.type === 'adjustment')) return tot; return tot + parseFloat(e.amount || 0); }, 0).toFixed(1)}</td></tr></tfoot></table></div></div><button onClick={onPrint} className="w-full mt-4 py-3 bg-[#002f55]/5 text-[#002f55] font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-[#002f55]/10 transition-all border border-[#002f55]/10"><Printer size={18} /> Shrani PDF Poročilo</button></div>
+        );
+
+        const TabAddEntry = ({
+          addEntry, amount, setAmount, payer, setPayer, members, selectedParticipants, setSelectedParticipants,
+          date, setDate, splitType, setSplitType, manualAmounts, setManualAmounts, isManualBalanced
+        }) => (
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 animate-fade-in">
+            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2"><PlusCircle className="text-[#002f55]" /> Nov račun</h3>
+            <form onSubmit={addEntry} className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Opis</label><input type="text" id="opis-input" placeholder="Spar, Pizza..." className="w-full p-3 bg-slate-50 rounded-xl outline-none" /></div>
+                <div><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Datum</label><input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl outline-none" /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Znesek (€)</label><input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl font-bold text-lg outline-none" placeholder="0.00" /></div>
+                <div><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Plačnik</label><select value={payer} onChange={e => setPayer(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl font-bold text-[#002f55] outline-none">{members.map(m => <option key={m} value={m}>{m}</option>)}</select></div>
+              </div>
+              <div className="flex bg-slate-100 p-1 rounded-2xl gap-1"><button type="button" onClick={() => setSplitType('equal')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${splitType === 'equal' ? 'bg-white shadow-sm text-[#002f55]' : 'text-slate-400'}`}>Enakomerno</button><button type="button" onClick={() => setSplitType('manual')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${splitType === 'manual' ? 'bg-white shadow-sm text-[#002f55]' : 'text-slate-400'}`}>Po porabi</button></div>
+              <div className="flex justify-end px-1 pt-2"><button type="button" onClick={() => setSelectedParticipants(selectedParticipants.length === members.length ? [] : [...members])} className="text-xs font-bold text-[#002f55] hover:text-[#001f3f] transition-colors flex items-center gap-2 py-2">{selectedParticipants.length === members.length ? <CheckSquare size={18} /> : <Square size={18} />} <span className="uppercase tracking-wider">Vsi</span></button></div>
+              <div className="space-y-2">{members.map(m => { const sel = selectedParticipants.includes(m); return (<div key={m} onClick={() => setSelectedParticipants(prev => prev.includes(m) ? prev.filter(p => p !== m) : [...prev, m])} className={`p-3 rounded-xl border transition-all flex items-center gap-3 cursor-pointer select-none ${sel ? 'bg-[#002f55]/5 border-[#002f55]/10 shadow-sm' : 'border-slate-50 hover:bg-slate-50'}`}><span className={`flex-1 text-sm font-bold ${sel ? 'text-slate-800' : 'text-slate-400'}`}>{m}</span>{splitType === 'manual' && sel ? (<div onClick={e => e.stopPropagation()}><input type="number" step="0.01" placeholder="0.00" value={manualAmounts[m] || ''} onChange={e => setManualAmounts({ ...manualAmounts, [m]: e.target.value })} className="w-20 p-1 bg-white border rounded text-right text-xs font-bold" /></div>) : (sel && <CheckCircle2 size={16} className="text-[#002f55]" />)}</div>); })}</div>
+              {splitType === 'manual' && (<div className={`p-3 rounded-xl text-center text-xs font-bold ${isManualBalanced ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>Vsota: {Object.values(manualAmounts).reduce((a, b) => a + (parseFloat(b) || 0), 0).toFixed(2)} € / {parseFloat(amount || 0).toFixed(2)} €</div>)}
+              <button type="submit" disabled={!amount || selectedParticipants.length === 0 || (splitType === 'manual' && !isManualBalanced)} className="w-full bg-[#002f55] text-white py-4 rounded-2xl font-black shadow-xl disabled:opacity-30">SHRANI RAČUN</button>
+            </form>
+          </div>
+        );
+
+        const TabHistory = ({ history, confirmDeleteEntry }) => (
+          <div className="space-y-4 animate-fade-in">
+            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 px-2"><History className="text-[#002f55]" /> Zgodovina</h3>
+            <div className="space-y-3">
+              {history.map(e => {
+                const isAdj = e.type === 'adjustment';
+                return (
+                  <div key={e.id} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative group flex justify-between items-start">
+                    <div className="flex gap-3">
+                      <div className="bg-slate-50 w-10 h-10 rounded-xl flex items-center justify-center flex-col text-slate-400 font-bold">
+                        <span className="text-[8px] uppercase">{new Date(e.date).toLocaleString('sl-SI', { month: 'short' })}</span>
+                        <span className="text-sm leading-none">{new Date(e.date).getDate()}</span>
+                      </div>
+                      <div className="flex-1 min-w-0 pr-2">
+                        <p className="text-sm font-bold text-slate-700">
+                          {isAdj ? e.user : e.payer} 
+                          <span className="text-xs font-normal text-slate-400 ml-1">
+                            {isAdj ? 'prenos stanja' : 'je plačal/a'}
+                          </span>
+                        </p>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[10px] font-bold text-slate-500">{e.opis}</span>
+                          {!isAdj && (
+                            <span className="text-[10px] text-slate-400 leading-tight">
+                              {e.participants && e.participants.length > 0 ? e.participants.join(', ') : 'Ni udeležencev'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-black text-slate-800">{e.amount.toFixed(2)} €</p>
+                      <button onClick={(event) => confirmDeleteEntry(e.id, event)} className="p-2 -mr-2 text-rose-300 hover:text-rose-500 transition-colors mt-1"><Trash2 size={16} /></button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+
+        const TabSettlement = ({ settlements, onPrint, showResetConfirm, setShowResetConfirm, manualStartBalances, setManualStartBalances, members, balances, isResetBalanced, isResetting, finalizeReset, startResetProcess, historyLength }) => (
+          <div className="space-y-6 animate-fade-in">
+            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Calculator className="text-[#002f55]" /> Obračun</h3>
+            <div className="bg-white p-6 rounded-3xl shadow-sm border-2 border-slate-100 space-y-4">{settlements.length > 0 ? settlements.map((s, i) => (<div key={i} className="flex items-center gap-3"><div className="flex-1 text-center bg-rose-50 rounded-xl p-2 font-bold text-xs">{s.from}</div><div className="text-center min-w-[60px]"><p className="text-[10px] font-black bg-slate-800 text-white px-2 py-0.5 rounded-full">{s.amount.toFixed(2)} €</p><ArrowRightCircle size={14} className="mx-auto text-slate-200 mt-1" /></div><div className="flex-1 text-center bg-emerald-50 rounded-xl p-2 font-bold text-xs">{s.to}</div></div>)) : <div className="text-center py-10 text-slate-300 italic">Vse je poravnano!</div>}</div>
+            <button onClick={onPrint} className="w-full py-3 bg-[#002f55]/5 text-[#002f55] font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-[#002f55]/10 transition-all border border-[#002f55]/10"><Printer size={18} /> Shrani PDF Poročilo</button>
+            {showResetConfirm ? (<div className="bg-white border-2 border-[#002f55] p-6 rounded-3xl shadow-2xl space-y-6"><div className="flex justify-between items-center mb-2"><h4 className="font-black text-[#002f55] flex items-center gap-2"><RefreshCcw size={20} /> Resetiraj</h4><button onClick={() => setManualStartBalances({ ...balances })} className="text-xs bg-[#002f55]/5 text-[#002f55] px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 hover:bg-[#002f55]/10 transition-all border border-[#002f55]/10"><ArrowDownCircle size={14} /> Prenesi stanja</button></div><p className="text-xs text-slate-400 -mt-4 mb-2">Vpiši ali prenesi končna stanja v novo obdobje.</p><div className="space-y-3 max-h-80 overflow-y-auto pr-1">{members.map(m => (<div key={m} className="flex justify-between items-center gap-4 bg-slate-50 p-2 rounded-xl"><span className="text-sm font-bold text-slate-600">{m}</span><input type="number" step="0.01" placeholder="0.00" value={manualStartBalances[m] || ''} onChange={e => setManualStartBalances({ ...manualStartBalances, [m]: e.target.value })} className="w-24 p-2 rounded-lg border border-[#002f55]/20 text-right font-black text-[#002f55]" /></div>))}</div><div className={`p-3 rounded-2xl text-center text-xs font-bold ${isResetBalanced ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>Vsota vseh stanj: {Object.values(manualStartBalances).reduce((a, b) => a + (parseFloat(b) || 0), 0).toFixed(2)} € (Mora biti 0)</div><div className="flex gap-2"><button onClick={() => setShowResetConfirm(false)} className="flex-1 py-3 text-slate-400 font-bold">Prekliči</button><button disabled={!isResetBalanced || isResetting} onClick={finalizeReset} className="flex-[2] bg-[#002f55] text-white py-3 rounded-2xl font-black shadow-lg shadow-[#002f55]/20 disabled:opacity-20">{isResetting ? 'Brisanje...' : 'POTRDI IN ZAČNI'}</button></div></div>) : (<button disabled={historyLength === 0} onClick={startResetProcess} className="w-full bg-white border-2 border-slate-100 py-5 rounded-3xl font-black text-slate-600 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all"><RefreshCcw size={18} className="text-[#002f55]" /> Zaključi obdobje</button>)}
+          </div>
+        );
+
+        const TabSettings = ({ members, history, removeMember, showAddMember, setShowAddMember, newMemberName, setNewMemberName, addMember }) => (
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 animate-fade-in">
+            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2"><UserPlus className="text-[#002f55]" /> Ekipa</h3>
+            <div className="space-y-2 mb-6">
+              {members.map(m => (
+                <div key={m} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl group transition-all hover:bg-white hover:shadow-sm">
+                  <span className="font-bold text-slate-600">{m}</span>
+                  {history.length === 0 && <button onClick={() => removeMember(m)} className="text-rose-200 hover:text-rose-500"><Trash2 size={16} /></button>}
+                </div>
+              ))}
+            </div>
+            {!showAddMember ? (
+              <button onClick={() => setShowAddMember(true)} className="w-full py-4 border-2 border-dashed border-slate-200 text-slate-400 rounded-2xl flex items-center justify-center gap-2 font-bold text-xs">DODAJ ČLANA</button>
+            ) : (
+              <div className="flex gap-2"><input autoFocus type="text" value={newMemberName} onChange={e => setNewMemberName(e.target.value)} placeholder="Ime..." className="flex-1 p-3 bg-slate-100 rounded-xl outline-none" onKeyDown={e => e.key === 'Enter' && addMember()} /><button onClick={addMember} className="bg-[#002f55] text-white px-6 rounded-xl font-black">DODAJ</button></div>
+            )}
+          </div>
+        );
+
+        // ==========================================
+        // 5. GLAVNA APLIKACIJA (CONTROLLER)
+        // ==========================================
+
+        export default function App() {
+          const [user, setUser] = useState(null); 
+          const [isAuthenticated, setIsAuthenticated] = useState(false); 
+          const [inputCode, setInputCode] = useState(''); 
+          const [authError, setAuthError] = useState(false); 
+
+          const [members, setMembers] = useState([]); 
+          const [history, setHistory] = useState([]); 
+          const [loading, setLoading] = useState(true); 
+
+          const [globalSettings, setGlobalSettings] = useState({ isBlurred: false });
+
+          const [activeTab, setActiveTab] = useState('dashboard'); 
+          const [showAddMember, setShowAddMember] = useState(false); 
+          const [newMemberName, setNewMemberName] = useState(''); 
+
+          const [showResetConfirm, setShowResetConfirm] = useState(false);
+          const [entryToDelete, setEntryToDelete] = useState(null);
+
+          const [showAdminAuth, setShowAdminAuth] = useState(false);
+          const [adminPinInput, setAdminPinInput] = useState('');
+          const [pendingAction, setPendingAction] = useState(null); 
+          const [adminAuthError, setAdminAuthError] = useState(false);
+
+          const [isResetting, setIsResetting] = useState(false);
+          const [matrixType, setMatrixType] = useState('P'); 
+          const [manualStartBalances, setManualStartBalances] = useState({}); 
+
+          const [amount, setAmount] = useState('');
+          const [payer, setPayer] = useState('');
+          const [selectedParticipants, setSelectedParticipants] = useState([]);
+          const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+          const [splitType, setSplitType] = useState('equal'); 
+          const [manualAmounts, setManualAmounts] = useState({});
+
+          const [showRoulette, setShowRoulette] = useState(false);
+          const [showStats, setShowStats] = useState(false); 
+           
+          // --- 1. PRIJAVA IN SINHRONIZACIJA ---
+          useEffect(() => {
+            const initAuth = async () => {
+              try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                  await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                  await signInAnonymously(auth);
+                }
+              } catch (error) {
+                console.error("Napaka pri prijavi:", error);
+              }
+            };
+            initAuth();
+            const unsubscribe = onAuthStateChanged(auth, setUser);
+            return () => unsubscribe();
+          }, []);
+
+          useEffect(() => {
+            if (!user) return;
+            const membersRef = collection(db, 'artifacts', appId, 'public', 'data', 'members');
+            const historyRef = collection(db, 'artifacts', appId, 'public', 'data', 'history');
+            const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
+
+            const unsubSettings = onSnapshot(settingsRef, (docSnap) => {
+              if (docSnap.exists()) {
+                setGlobalSettings(docSnap.data());
+              } else {
+                setDoc(settingsRef, { isBlurred: false });
+              }
+            });
+
+            const unsubMembers = onSnapshot(membersRef, (snapshot) => {
+              const mList = snapshot.docs.map(doc => doc.data().name);
+              if (mList.length === 0 && loading) {
+                const defaults = ["Martin", "Mitja", "Pavel", "Matej", "Zala", "Stela"];
+                defaults.forEach(async (n) => {
+                  await setDoc(doc(membersRef, n), { name: n });
+                });
+              } else {
+                setMembers(mList);
+              }
+            });
+
+            const unsubHistory = onSnapshot(historyRef, (snapshot) => {
+              const hList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+              hList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); 
+              setHistory(hList);
+              setLoading(false);
+            });
+
+            return () => { unsubMembers(); unsubHistory(); unsubSettings(); };
+          }, [user, loading]);
+
+          useEffect(() => {
+            if (members.length > 0) {
+              if (!payer || !members.includes(payer)) setPayer(members[0]);
+              // Check if this is the initial load (empty selection)
+              if (selectedParticipants.length === 0) setSelectedParticipants([...members]);
+            }
+          }, [members]); // Fix: Removed selectedParticipants.length and payer from deps
+
+          // --- 2. IZRAČUNI ---
+          const balances = useMemo(() => {
+            const b = {};
+            members.forEach(m => b[m] = 0);
+             
+            history.forEach(entry => {
+              if (entry.user && !b.hasOwnProperty(entry.user)) b[entry.user] = 0;
+              if (entry.payer && !b.hasOwnProperty(entry.payer)) b[entry.payer] = 0;
+              if (entry.participants) entry.participants.forEach(p => { if (!b.hasOwnProperty(p)) b[p] = 0; });
+            });
+
+            history.forEach(entry => {
+              if (entry.type === 'adjustment') {
+                b[entry.user] = money((b[entry.user] || 0) + entry.amount);
+                return;
+              }
+              const numAmount = parseFloat(entry.amount) || 0;
+              if (b.hasOwnProperty(entry.payer)) b[entry.payer] += numAmount;
+
+              if (entry.splitType === 'manual' && entry.manualAmounts) {
+                Object.entries(entry.manualAmounts).forEach(([name, cost]) => {
+                  if (b.hasOwnProperty(name)) b[name] -= (parseFloat(cost) || 0);
+                });
+              } else if (entry.participants && entry.participants.length > 0) {
+                const costPer = numAmount / entry.participants.length;
+                entry.participants.forEach(p => {
+                  if (b.hasOwnProperty(p)) b[p] -= costPer;
+                });
+              }
+            });
+
+            Object.keys(b).forEach(k => b[k] = money(b[k]));
+            return b;
+          }, [history, members]);
+
+          const payerRanking = useMemo(() => {
+            return [...members].sort((a, b) => (balances[a] || 0) - (balances[b] || 0));
+          }, [members, balances]);
+
+          const titles = useMemo(() => {
+            return calculateTitles(members, balances, history);
+          }, [members, balances, history]);
+           
+          const settlements = useMemo(() => {
+            const bCopy = { ...balances };
+            const debtors = [], creditors = [];
+            Object.entries(bCopy).forEach(([n, v]) => {
+              if (v < -0.01) debtors.push({ n, v: Math.abs(v) });
+              else if (v > 0.01) creditors.push({ n, v });
+            });
+            debtors.sort((a, b) => b.v - a.v);
+            creditors.sort((a, b) => b.v - a.v);
+             
+            const res = [];
+            let di = 0, ci = 0;
+            while (di < debtors.length && ci < creditors.length) {
+              const amt = money(Math.min(debtors[di].v, creditors[ci].v));
+              if (amt > 0) {
+                res.push({ from: debtors[di].n, to: creditors[ci].n, amount: amt });
+                debtors[di].v = money(debtors[di].v - amt);
+                creditors[ci].v = money(creditors[ci].v - amt);
+              }
+              if (debtors[di].v <= 0) di++;
+              if (creditors[ci].v <= 0) ci++;
+            }
+            return res;
+          }, [balances]);
+
+          const isManualBalanced = useMemo(() => {
+            return money(Object.values(manualAmounts).reduce((a, b) => a + (parseFloat(b) || 0), 0)) === money(parseFloat(amount) || 0);
+          }, [manualAmounts, amount]);
+
+          const isResetBalanced = useMemo(() => {
+            return Math.abs(Object.values(manualStartBalances).reduce((a, b) => a + (parseFloat(b) || 0), 0)) < 0.01;
+          }, [manualStartBalances]);
+
+          const handlePrintReport = () => window.print();
+
+          // --- 3. AKCIJE ---
+          const handleToggleBlur = () => {
+            setPendingAction({ type: 'TOGGLE_BLUR' });
+            setAdminPinInput('');
+            setAdminAuthError(false);
+            setShowAdminAuth(true);
+          };
+
+          const handleAddEntrySubmit = async (e) => {
+            e.preventDefault();
+            if (!user || !amount || selectedParticipants.length === 0) return;
+            if (splitType === 'manual' && !isManualBalanced) return;
+             
+            setPendingAction({ type: 'ADD' });
+            setAdminPinInput('');
+            setAdminAuthError(false);
+            setShowAdminAuth(true);
+          };
+
+          const performAddEntry = async () => {
+            const data = { 
+              date, 
+              payer, 
+              amount: parseFloat(amount), 
+              participants: [...selectedParticipants], 
+              splitType, 
+              timestamp: Date.now(), 
+              opis: document.getElementById('opis-input')?.value || 'Malica' 
+            };
+            if (splitType === 'manual') data.manualAmounts = { ...manualAmounts };
+             
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'history'), data);
+            setAmount('');
+            setManualAmounts({});
+            setActiveTab('history');
+          };
+
+          const confirmDeleteEntry = (id, event) => {
+            if (event) event.stopPropagation();
+            setPendingAction({ type: 'DELETE', payload: id });
+            setAdminPinInput('');
+            setAdminAuthError(false);
+            setShowAdminAuth(true);
+          };
+
+          const performDeleteEntry = async () => {
+            if (!user || !entryToDelete) return;
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'history', entryToDelete));
+            setEntryToDelete(null);
+          };
+
+          const startResetProcess = () => {
+            setPendingAction({ type: 'RESET' });
+            setAdminPinInput('');
+            setAdminAuthError(false);
+            setShowAdminAuth(true);
+          };
+
+          const addMemberAction = async () => {
+            if (!user || !newMemberName.trim()) return;
+            setPendingAction({ type: 'ADD_MEMBER' });
+            setAdminPinInput('');
+            setAdminAuthError(false);
+            setShowAdminAuth(true);
+          };
+
+          const performAddMember = async () => {
+            const name = newMemberName.trim();
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', name), { name });
+            setNewMemberName('');
+            setShowAddMember(false);
+          };
+
+          const removeMember = async (n) => {
+            if (!user) return;
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', n));
+          };
+
+          const verifyAdminPin = async () => {
+            const pin = adminPinInput;
+            const action = pendingAction?.type;
+            let valid = false;
+
+            if ((action === 'DELETE' || action === 'RESET' || action === 'TOGGLE_BLUR') && pin === ADMIN_PIN) valid = true;
+            else if ((action === 'ADD' || action === 'ADD_MEMBER') && (pin === EDIT_CODE || pin === ADMIN_PIN)) valid = true;
+
+            if (valid) {
+              setShowAdminAuth(false);
+              if (action === 'DELETE') {
+                setEntryToDelete(pendingAction.payload);
+              } else if (action === 'RESET') {
+                const init = {};
+                members.forEach(m => init[m] = 0);
+                setManualStartBalances(init);
+                setShowResetConfirm(true);
+              } else if (action === 'ADD') {
+                performAddEntry();
+              } else if (action === 'ADD_MEMBER') {
+                performAddMember();
+              } else if (action === 'TOGGLE_BLUR') {
+                const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
+                await setDoc(settingsRef, { isBlurred: !globalSettings.isBlurred });
+              }
+              setPendingAction(null);
+            } else {
+              setAdminAuthError(true);
+            }
+          };
+
+          const finalizeReset = async () => {
+            if (!user) return;
+            setIsResetting(true);
+            try {
+              const historyRef = collection(db, 'artifacts', appId, 'public', 'data', 'history');
+              const snap = await getDocs(historyRef);
+              const batch = writeBatch(db);
+              
+              snap.docs.forEach(d => batch.delete(d.ref));
+              
+              for (const [name, val] of Object.entries(manualStartBalances)) {
+                const v = parseFloat(val) || 0;
+                if (Math.abs(v) < 0.01) continue;
+                batch.set(doc(historyRef), { 
+                  type: 'adjustment', 
+                  user: name, 
+                  amount: v, 
+                  timestamp: Date.now(), 
+                  date: new Date().toISOString().split('T')[0], 
+                  opis: 'Začetno stanje' 
+                });
+              }
+              await batch.commit();
+              setShowResetConfirm(false);
+              setActiveTab('dashboard');
+            } catch (e) {
+              console.error("Reset failed:", e);
+            } finally {
+              setIsResetting(false);
+            }
+          };
+
+          const checkAccess = () => {
+            if (inputCode === ACCESS_CODE) {
+              setIsAuthenticated(true);
+              setAuthError(false);
+            } else {
+              setAuthError(true);
+            }
+          };
+
+          if (!isAuthenticated) return <AuthScreen inputCode={inputCode} setInputCode={setInputCode} checkAccess={checkAccess} authError={authError} />;
+          if (loading) return <LoadingScreen />;
+
+          return (
+            <div className="min-h-screen bg-slate-50 pb-24 font-sans app-container">
+              <style>{`
+                @media print {
+                    @page { margin: 1cm; size: A4; }
+                    html, body { width: 100%; height: 100%; margin: 0 !important; padding: 0 !important; overflow: visible !important; background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    body > * { display: none !important; }
+                    body > div.app-container { display: block !important; height: auto !important; width: 100% !important; position: static !important; overflow: visible !important; }
+                    nav, header, main, .fixed, button, .no-print { display: none !important; }
+                    .print-container { display: block !important; position: static !important; width: 100% !important; height: auto !important; overflow: visible !important; font-family: sans-serif; font-size: 10px; color: black; background: white; }
+                    ::-webkit-scrollbar { display: none; }
+                    .page-break { page-break-before: always; }
+                    .avoid-break { page-break-inside: avoid; }
+                }
+                .print-container { display: none; }
+                .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+                .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+                .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                .report-table th, .report-table td { border: 1px solid #e2e8f0; padding: 4px 6px; }
+                .report-table th { background-color: #f8fafc; font-weight: bold; text-transform: uppercase; font-size: 9px; }
+                .code-block { font-family: 'Courier New', Courier, monospace; background-color: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 4px; white-space: pre-wrap; font-size: 9px; color: #334155; }
+              `}</style>
+
+              <AdminModal show={showAdminAuth} pin={adminPinInput} setPin={setAdminPinInput} error={adminAuthError} pendingAction={pendingAction} onConfirm={verifyAdminPin} onCancel={() => { setShowAdminAuth(false); setPendingAction(null); }} />
+              <DeleteConfirmModal entry={entryToDelete} onConfirm={performDeleteEntry} onCancel={() => setEntryToDelete(null)} />
+              <RouletteModal members={members} balances={balances} show={showRoulette} onClose={() => setShowRoulette(false)} />
+              
+              <StatisticsModal show={showStats} onClose={() => setShowStats(false)} history={history} />
+
+              <PrintReport history={history} members={members} balances={balances} settlements={settlements} />
+
+              <header className="bg-gradient-to-br from-[#002f55] to-[#001f3f] text-white p-6 rounded-b-[2.5rem] shadow-xl mb-6 print:hidden text-center relative overflow-hidden">
+                <h1 className="text-2xl font-bold flex items-center justify-center gap-2 relative z-10"><Wallet className="text-[#e4b00f]" /> Malica Manager</h1>
+                <div className="flex items-center justify-center gap-2 mt-1"><div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div><p className="text-[#e4b00f] text-[10px] uppercase tracking-widest opacity-80">Cloud Sync Active</p></div>
+              </header>
+
+              <main className="max-w-md mx-auto px-4 print:hidden">
+                {activeTab === 'dashboard' && (
+                  <TabDashboard 
+                    payerRanking={payerRanking} 
+                    balances={balances} 
+                    setActiveTab={setActiveTab} 
+                    titles={titles} 
+                    onOpenRoulette={() => setShowRoulette(true)}
+                    isBlurred={globalSettings.isBlurred}
+                    onToggleBlur={handleToggleBlur}
+                    onOpenStats={() => setShowStats(true)} 
+                  />
+                )}
+                {activeTab === 'matrix' && <TabMatrix members={members} history={history} matrixType={matrixType} setMatrixType={setMatrixType} onPrint={handlePrintReport} />}
+                {activeTab === 'add' && (
+                  <TabAddEntry
+                    addEntry={handleAddEntrySubmit} amount={amount} setAmount={setAmount} payer={payer} setPayer={setPayer} members={members}
+                    selectedParticipants={selectedParticipants} setSelectedParticipants={setSelectedParticipants}
+                    date={date} setDate={setDate} splitType={splitType} setSplitType={setSplitType}
+                    manualAmounts={manualAmounts} setManualAmounts={setManualAmounts} isManualBalanced={isManualBalanced}
+                  />
+                )}
+                {activeTab === 'history' && <TabHistory history={history} confirmDeleteEntry={confirmDeleteEntry} />}
+                {activeTab === 'settle' && (
+                  <TabSettlement
+                    settlements={settlements} onPrint={handlePrintReport} showResetConfirm={showResetConfirm} setShowResetConfirm={setShowResetConfirm}
+                    manualStartBalances={manualStartBalances} setManualStartBalances={setManualStartBalances} members={members}
+                    balances={balances} isResetBalanced={isResetBalanced} isResetting={isResetting} finalizeReset={finalizeReset}
+                    startResetProcess={startResetProcess} historyLength={history.length}
+                  />
+                )}
+                {activeTab === 'settings' && (
+                  <TabSettings
+                    members={members} history={history} removeMember={removeMember}
+                    showAddMember={showAddMember} setShowAddMember={setShowAddMember}
+                    newMemberName={newMemberName} setNewMemberName={setNewMemberName} addMember={addMemberAction}
+                  />
+                )}
+              </main>
+
+              <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
+            </div>
+          );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
+        const root = createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
 </body>

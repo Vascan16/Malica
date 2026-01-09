@@ -37,7 +37,7 @@
           Wallet, Calculator, CheckCircle2, Download,
           AlertTriangle, FileText, CheckSquare, Square, Lock, Info, Scale,
           ListOrdered, RefreshCcw, Save, Table, Grid, Printer, Bell, X,
-          Crown, PiggyBank, Ghost, Medal, Dices, Eye, EyeOff, BarChart3, Pizza, Settings, Utensils
+          Crown, PiggyBank, Ghost, Medal, Dices, Eye, EyeOff, BarChart3, Pizza, Settings, Utensils, StickyNote, PenLine
         } from 'lucide-react';
         import { initializeApp } from 'firebase/app';
         import { 
@@ -108,11 +108,11 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Skrite kode (Base64) - Kirurško zamenjane in zamaskirane
+
         const _appVitals = {
-          a_key: atob("MTI0Mw=="), // 1243
-          e_key: atob("MTI0Mw=="), // 1243
-          s_key: atob("MDAwMA==")  // 0000
+          a_key: atob("MTI0Mw=="), //
+          e_key: atob("MTI0Mw=="), // 
+          s_key: atob("MDAwMA==")  // 
         };
 
         const ACCESS_CODE = _appVitals.a_key;
@@ -249,6 +249,72 @@
         // 3. UI KOMPONENTE
         // ==========================================
 
+        // --- LUNCH TICKER COMPONENT (ENHANCED) ---
+        const LunchTicker = ({ balances, history, memberHunger, dailyMessage }) => {
+            const tickerItems = useMemo(() => {
+                const list = [];
+                
+                // 1. Balances
+                Object.entries(balances).forEach(([name, amount]) => {
+                    list.push({ 
+                        type: 'balance', 
+                        text: `${name}: ${amount >= 0 ? '▲' : '▼'} ${Math.abs(amount).toFixed(2)} €`, 
+                        color: amount >= 0 ? 'text-emerald-400' : 'text-rose-400' 
+                    });
+                });
+
+                // 2. Daily Message (High Priority)
+                if (dailyMessage) {
+                    list.unshift({ type: 'msg', text: `📢 OBVESTILO: ${dailyMessage}`, color: 'text-yellow-400 font-bold' });
+                }
+
+                // 3. Last Transaction
+                const lastEntry = history.find(e => e.type !== 'adjustment');
+                if (lastEntry) {
+                    list.push({ type: 'news', text: `📰 ZADNJE: ${lastEntry.payer} plačal/a "${lastEntry.opis}" (${parseFloat(lastEntry.amount).toFixed(2)}€)`, color: 'text-blue-300' });
+                }
+
+                // 4. Hunger Index
+                const hungryCount = Object.values(memberHunger).filter(v => v).length;
+                const totalMembers = Object.keys(balances).length;
+                if (totalMembers > 0) {
+                     list.push({ type: 'stat', text: `🍔 LAKOTA: ${hungryCount}/${totalMembers}`, color: hungryCount > 0 ? 'text-orange-400' : 'text-slate-400' });
+                }
+
+                // 5. Market Volume
+                const vol = Object.values(balances).reduce((sum, v) => v > 0 ? sum + v : sum, 0);
+                list.push({ type: 'stat', text: `📊 OBSEG: ${vol.toFixed(2)} €`, color: 'text-purple-300' });
+
+                // 6. Avg Price
+                const recentMeals = history.filter(e => e.type !== 'adjustment').slice(0, 10);
+                if (recentMeals.length > 0) {
+                    const totalSpent = recentMeals.reduce((acc, e) => acc + (parseFloat(e.amount)||0), 0);
+                    const totalPeople = recentMeals.reduce((acc, e) => acc + (e.participants?.length || 0), 0);
+                    const avg = totalPeople ? totalSpent / totalPeople : 0;
+                    list.push({ type: 'stat', text: `📈 IND. MALICE: ${avg.toFixed(2)}€/osebo`, color: 'text-cyan-300' });
+                }
+
+                return list;
+            }, [balances, history, memberHunger, dailyMessage]);
+
+            if (tickerItems.length === 0) return null;
+
+            // Duplicate content for smooth infinite loop
+            const displayItems = [...tickerItems, ...tickerItems, ...tickerItems];
+
+            return (
+                <div className="fixed bottom-[72px] left-0 right-0 bg-[#001f3f] text-white overflow-hidden py-1.5 z-40 border-t border-[#002f55] shadow-lg print:hidden h-8 flex items-center">
+                    <div className="animate-scroll flex gap-8 whitespace-nowrap px-4">
+                        {displayItems.map((item, i) => (
+                            <div key={i} className={`flex items-center gap-1.5 text-[10px] font-mono tracking-wide ${item.color || 'text-white'}`}>
+                                {item.text}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
         const StatisticsModal = ({ show, onClose, history }) => {
           const stats = useMemo(() => {
             const transactions = history.filter(e => e.type !== 'adjustment');
@@ -357,6 +423,46 @@
                 </div>
                 <div className="p-6 bg-slate-50 shrink-0">
                   <button onClick={onClose} className="w-full py-4 bg-[#002f55] text-white rounded-2xl font-black text-sm shadow-xl">ZAPRI PREGLED</button>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // --- MESSAGE MODAL COMPONENT (NEW) ---
+        const MessageModal = ({ show, message, setMessage, onConfirm, onCancel }) => {
+          if (!show) return null;
+          return (
+            <div className="fixed inset-0 bg-slate-900/80 z-[90] flex items-center justify-center p-6 backdrop-blur-sm animate-fade-in no-print">
+              <div className="bg-white p-6 rounded-3xl w-full max-w-xs shadow-2xl border-2 border-yellow-100 text-center relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-2 bg-yellow-400"></div>
+                
+                <div className="flex justify-center mb-4 mt-2">
+                    <div className="bg-yellow-100 p-4 rounded-full text-yellow-600 shadow-sm">
+                        <StickyNote size={32} />
+                    </div>
+                </div>
+                
+                <h3 className="text-xl font-black text-slate-800 mb-2">Sporočilo dneva</h3>
+                <p className="text-xs text-slate-400 mb-4">Sporočilo bo vidno vsem, dokler se ne vnese nov račun.</p>
+                
+                <textarea 
+                    autoFocus 
+                    value={message} 
+                    onChange={e => setMessage(e.target.value)} 
+                    placeholder="Npr. Danes gremo na burgerje..." 
+                    className="w-full bg-yellow-50/50 border-2 border-yellow-200 rounded-xl py-3 px-4 text-center font-bold text-slate-700 outline-none focus:border-yellow-400 focus:bg-white transition-all min-h-[80px] resize-none mb-4" 
+                    onKeyDown={e => {
+                        if(e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            onConfirm();
+                        }
+                    }}
+                />
+                
+                <div className="flex gap-2">
+                    <button onClick={onCancel} className="flex-1 py-3 text-slate-400 font-bold bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">Prekliči</button>
+                    <button onClick={onConfirm} className="flex-1 py-3 bg-yellow-400 text-yellow-900 font-bold rounded-xl shadow-lg hover:bg-yellow-500 transition-colors">Objavi</button>
                 </div>
               </div>
             </div>
@@ -557,8 +663,33 @@
         // 4. ZAVIHKI
         // ==========================================
 
-        const TabDashboard = ({ payerRanking, balances, setActiveTab, titles, onOpenRoulette, isBlurred, onToggleBlur, onOpenStats, memberHunger, onToggleHunger }) => (
+        const TabDashboard = ({ payerRanking, balances, setActiveTab, titles, onOpenRoulette, isBlurred, onToggleBlur, onOpenStats, memberHunger, onToggleHunger, dailyMessage, onEditMessage }) => (
           <div className="space-y-6 animate-fade-in">
+            {/* SPOROČILO DNEVA - LOGIKA */}
+            {dailyMessage ? (
+                <div className="bg-yellow-100 border-2 border-yellow-200 p-4 rounded-2xl flex items-start gap-3 shadow-sm relative animate-fade-in">
+                    <StickyNote className="text-yellow-500 shrink-0" size={24} />
+                    <div className="flex-1">
+                        <p className="text-[10px] font-bold text-yellow-600 uppercase tracking-widest mb-1">Sporočilo dneva</p>
+                        <p className="font-bold text-yellow-900 text-sm leading-tight break-words">
+                            {dailyMessage}
+                        </p>
+                    </div>
+                    <button 
+                        onClick={onEditMessage}
+                        className="p-2 bg-yellow-200 text-yellow-700 rounded-xl hover:bg-yellow-300 transition-colors"
+                    >
+                        <PenLine size={16} />
+                    </button>
+                </div>
+            ) : (
+                <div className="flex justify-end -mb-2">
+                     <button onClick={onEditMessage} className="text-slate-300 hover:text-[#002f55] transition-colors p-2 rounded-full hover:bg-slate-100" title="Dodaj sporočilo">
+                        <PenLine size={18} />
+                    </button>
+                </div>
+            )}
+
             <div className="bg-white p-6 rounded-3xl shadow-lg border border-white text-center relative">
               <button 
                 onClick={onToggleBlur}
@@ -578,7 +709,7 @@
                 </div>
               )}
             </div>
-
+            
             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
               <div className="p-5 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
                 <h3 className="font-bold text-slate-700 flex items-center gap-2"><ListOrdered size={18} className="text-[#002f55]" /> Vrstni red</h3>
@@ -742,7 +873,7 @@
           const [history, setHistory] = useState([]); 
           const [loading, setLoading] = useState(true); 
 
-          const [globalSettings, setGlobalSettings] = useState({ isBlurred: false });
+          const [globalSettings, setGlobalSettings] = useState({ isBlurred: false, dailyMessage: "" }); // Updated: dailyMessage
 
           const [activeTab, setActiveTab] = useState('dashboard'); 
           const [showAddMember, setShowAddMember] = useState(false); 
@@ -769,6 +900,10 @@
 
           const [showRoulette, setShowRoulette] = useState(false);
           const [showStats, setShowStats] = useState(false); 
+
+          // New: State for Message Modal
+          const [showMessageModal, setShowMessageModal] = useState(false);
+          const [messageInput, setMessageInput] = useState("");
            
           // --- 1. PRIJAVA IN SINHRONIZACIJA ---
           useEffect(() => {
@@ -798,7 +933,7 @@
               if (docSnap.exists()) {
                 setGlobalSettings(docSnap.data());
               } else {
-                setDoc(settingsRef, { isBlurred: false });
+                setDoc(settingsRef, { isBlurred: false, dailyMessage: "" });
               }
             });
 
@@ -937,8 +1072,26 @@
             setShowAdminAuth(true);
           };
 
+          const setDailyMessageAction = async (msg) => {
+              if (!user) return;
+              await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), { dailyMessage: msg }, { merge: true });
+          };
+
+          // --- MODAL HANDLERS ---
+          const openMessageModal = () => {
+              setMessageInput(globalSettings.dailyMessage || "");
+              setShowMessageModal(true);
+          };
+
+          const saveMessageFromModal = () => {
+              setDailyMessageAction(messageInput);
+              setShowMessageModal(false);
+          };
+
           const performAddEntry = async () => {
-            const batch = writeBatch(db); // Init batch
+            if (!user || !amount || selectedParticipants.length === 0) return;
+            
+            const batch = writeBatch(db);
 
             const data = { 
               date, 
@@ -951,11 +1104,11 @@
             };
             if (splitType === 'manual') data.manualAmounts = { ...manualAmounts };
              
-            // 1. Add history entry via batch
-            const newHistoryRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'history'));
-            batch.set(newHistoryRef, data);
+            // 1. Dodaj vnos v zgodovino
+            const historyRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'history'));
+            batch.set(historyRef, data);
 
-            // 2. Reset hunger for everyone who is hungry
+            // 2. Resetiraj lakoto za vse, ki so lačni
             Object.keys(memberHunger).forEach(name => {
                 if (memberHunger[name]) {
                     const memberRef = doc(db, 'artifacts', appId, 'public', 'data', 'members', name);
@@ -963,7 +1116,11 @@
                 }
             });
 
-            await batch.commit(); // Commit all changes
+            // 3. Resetiraj sporočilo dneva
+            const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
+            batch.set(settingsRef, { dailyMessage: "" }, { merge: true });
+
+            await batch.commit();
 
             setAmount('');
             setManualAmounts({});
@@ -1145,15 +1302,22 @@
                 .report-table th, .report-table td { border: 1px solid #e2e8f0; padding: 4px 6px; }
                 .report-table th { background-color: #f8fafc; font-weight: bold; text-transform: uppercase; font-size: 9px; }
                 .code-block { font-family: 'Courier New', Courier, monospace; background-color: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 4px; white-space: pre-wrap; font-size: 9px; color: #334155; }
+              
+                @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+                .animate-scroll { display: flex; width: max-content; animation: scroll 30s linear infinite; }
+                .ticker-mask { mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); }
               `}</style>
 
               <AdminModal show={showAdminAuth} pin={adminPinInput} setPin={setAdminPinInput} error={adminAuthError} pendingAction={pendingAction} onConfirm={verifyAdminPin} onCancel={() => { setShowAdminAuth(false); setPendingAction(null); }} />
               <DeleteConfirmModal entry={entryToDelete} onConfirm={performDeleteEntry} onCancel={() => setEntryToDelete(null)} />
               <RouletteModal members={members} balances={balances} show={showRoulette} onClose={() => setShowRoulette(false)} />
+              <MessageModal show={showMessageModal} message={messageInput} setMessage={setMessageInput} onConfirm={saveMessageFromModal} onCancel={() => setShowMessageModal(false)} />
               
               <StatisticsModal show={showStats} onClose={() => setShowStats(false)} history={history} />
 
               <PrintReport history={history} members={members} balances={balances} settlements={settlements} />
+
+              <LunchTicker balances={balances} history={history} memberHunger={memberHunger} dailyMessage={globalSettings.dailyMessage} />
 
               <header className="bg-gradient-to-br from-[#002f55] to-[#001f3f] text-white p-6 rounded-b-[2.5rem] shadow-xl mb-6 print:hidden text-center relative overflow-hidden">
                 <h1 className="text-2xl font-bold flex items-center justify-center gap-2 relative z-10"><Wallet className="text-[#e4b00f]" /> Malica Manager</h1>
@@ -1173,6 +1337,8 @@
                     onOpenStats={() => setShowStats(true)} 
                     memberHunger={memberHunger}
                     onToggleHunger={toggleHungerAction}
+                    dailyMessage={globalSettings.dailyMessage}
+                    onEditMessage={openMessageModal}
                   />
                 )}
                 {activeTab === 'matrix' && <TabMatrix members={members} history={history} matrixType={matrixType} setMatrixType={setMatrixType} onPrint={handlePrintReport} />}

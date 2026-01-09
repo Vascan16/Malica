@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Malica Manager</title>
     
+    <!-- PWA / Mobile Web App Settings -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/706/706164.png">
+    <link rel="manifest" href='data:application/manifest+json,{
+        "name": "Malica Manager",
+        "short_name": "Malica",
+        "display": "standalone",
+        "start_url": ".",
+        "background_color": "#f8fafc",
+        "theme_color": "#002f55",
+        "icons": [{
+            "src": "https://cdn-icons-png.flaticon.com/512/706/706164.png", 
+            "sizes": "512x512",
+            "type": "image/png"
+        }]
+    }' />
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -108,11 +126,10 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-
         const _appVitals = {
-          a_key: atob("MTI0Mw=="), //
-          e_key: atob("MTI0Mw=="), // 
-          s_key: atob("MDAwMA==")  // 
+          a_key: atob("MTI0Mw=="),
+          e_key: atob("MTI0Mw=="),
+          s_key: atob("MDAwMA==")  
         };
 
         const ACCESS_CODE = _appVitals.a_key;

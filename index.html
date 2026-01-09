@@ -2,7 +2,7 @@
 <html lang="sl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Malica Manager</title>
     
     <!-- PWA / Mobile Web App Settings -->
@@ -26,19 +26,25 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
     <!-- Babel za prevajanje JSX v brskalniku -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- ES Module Shims: NUJNO za podporo na starejših iOS (iPhone) napravah -->
-    <script async src="https://ga.jspm.io/npm:es-module-shims@1.7.0/dist/es-module-shims.js"></script>
+    <!-- ES Module Shims -->
+    <script async src="https://ga.jspm.io/npm:es-module-shims@1.8.0/dist/es-module-shims.js"></script>
 
-    <!-- Import Map za knjižnice (omogoča 'import ... from ...' sintakso) -->
+    <!-- Import Map -->
     <script type="importmap">
     {
         "imports": {
             "react": "https://esm.sh/react@18.2.0",
+            "react-dom": "https://esm.sh/react-dom@18.2.0",
             "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+            "prop-types": "https://esm.sh/prop-types@15.8.1",
             "lucide-react": "https://esm.sh/lucide-react@0.292.0?external=react",
+            "recharts": "https://esm.sh/recharts@2.12.3?external=react,react-dom,prop-types",
             "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
             "firebase/auth": "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js",
             "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
@@ -46,53 +52,77 @@
     }
     </script>
 </head>
-<body class="bg-slate-50">
+<body class="bg-slate-50 select-none">
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
-        import {
-          Users, History, PlusCircle, Trash2, TrendingDown,
+        import { 
+          Users, History, PlusCircle, Trash2, TrendingDown, 
           CreditCard, UserPlus, ArrowRightCircle, ArrowDownCircle, Calendar,
-          Wallet, Calculator, CheckCircle2, Download,
-          AlertTriangle, FileText, CheckSquare, Square, Lock, Info, Scale,
-          ListOrdered, RefreshCcw, Save, Table, Grid, Printer, Bell, X,
-          Crown, PiggyBank, Ghost, Medal, Dices, Eye, EyeOff, BarChart3, Pizza, Settings, Utensils, StickyNote, PenLine
+          Wallet, Calculator, CheckCircle2, Download, 
+          AlertTriangle, FileText, CheckSquare, Square, Lock, Info, Scale, 
+          ListOrdered, RefreshCcw, Save, Table, Grid, Printer, Bell, X, 
+          Crown, PiggyBank, Ghost, Medal, Dices, Eye, EyeOff, BarChart3, Pizza, Settings, Utensils, StickyNote, PenLine,
+          PieChart as IconPieChart, Activity, Database, ArrowRight
         } from 'lucide-react';
+        
+        // --- RECHARTS IMPORTS (Zamenjan AreaChart z LineChart) ---
+        import { 
+            PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, 
+            Legend, LineChart, Line, XAxis, YAxis, CartesianGrid, ReferenceLine
+        } from 'recharts';
+
         import { initializeApp } from 'firebase/app';
         import { 
-          getAuth, 
-          signInAnonymously, 
-          signInWithCustomToken, 
-          onAuthStateChanged 
-        } from 'firebase/auth';
+           getAuth, 
+           signInAnonymously, 
+           signInWithCustomToken, 
+           onAuthStateChanged 
+         } from 'firebase/auth';
         import { 
-          getFirestore, 
-          collection, 
-          doc, 
-          setDoc, 
-          addDoc, 
-          deleteDoc, 
-          onSnapshot, 
-          query, 
-          writeBatch, 
-          getDocs, 
-          serverTimestamp 
-        } from 'firebase/firestore';
+           getFirestore, 
+           collection, 
+           doc, 
+           setDoc, 
+           addDoc, 
+           deleteDoc, 
+           onSnapshot, 
+           query, 
+           writeBatch, 
+           getDocs, 
+           serverTimestamp 
+         } from 'firebase/firestore';
 
-        // ==========================================
-        // TVOJA KODA SE ZAČNE TUKAJ
-        // ==========================================
+        // ... (Error Boundary in Config ostanejo enaki) ...
+        class ErrorBoundary extends React.Component {
+            constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+            static getDerivedStateFromError(error) { return { hasError: true, error }; }
+            componentDidCatch(error, errorInfo) { console.error("Critical App Error:", error, errorInfo); }
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-slate-50 text-slate-800 font-sans">
+                            <div className="bg-white p-8 rounded-3xl shadow-xl border-2 border-rose-100 max-w-sm">
+                                <div className="bg-rose-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-500">
+                                    <AlertTriangle size={32} />
+                                </div>
+                                <h1 className="text-xl font-black mb-2">Ups, nekaj se je zalomilo!</h1>
+                                <p className="text-xs text-slate-500 mb-6 font-mono bg-slate-100 p-2 rounded">
+                                    {this.state.error?.message || "Neznana napaka"}
+                                </p>
+                                <button onClick={() => window.location.reload()} className="w-full bg-[#002f55] text-white py-3 rounded-xl font-bold shadow-lg">
+                                    Osveži Aplikacijo
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+                return this.props.children;
+            }
+        }
 
-        // ==========================================
-        // 1. KONFIGURACIJA IN KONSTANTE
-        // ==========================================
-
-        // ---------------------------------------------------------
-        // TUKAJ VSTAVI SVOJE FIREBASE PODATKE ZA GITHUB/LOKALNO:
-        // (Ko teče v Canvasu, se to ignorira)
-        // ---------------------------------------------------------
         const MOJ_FIREBASE_CONFIG = {
           apiKey: "AIzaSyBjoIbXZEELew5F1zVnYzUbStp0IfVAwgg",
           authDomain: "malicamanagerpro.firebaseapp.com",
@@ -102,24 +132,19 @@
           appId: "1:902764840464:web:7ad08867d6c6593efd2c95",
           measurementId: "G-WDP7KK30QQ"
         };
-        // ---------------------------------------------------------
 
-        // Inteligentna izbira konfiguracije
         let firebaseConfig;
         let appId;
 
         try {
-            // 1. Poskus: Ali smo v Canvas okolju?
             if (typeof __firebase_config !== 'undefined') {
                 firebaseConfig = JSON.parse(__firebase_config);
                 appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
             } else {
-                // 2. Fallback: Smo na GitHubu ali lokalno -> Uporabi tvoje podatke
                 firebaseConfig = MOJ_FIREBASE_CONFIG;
-                appId = 'malica-manager-v1'; // Ime mape v bazi, lahko spremeniš
+                appId = 'malica-manager-v1'; 
             }
         } catch (e) {
-            // Varnostni fallback
             console.warn("Preklop na ročno konfiguracijo.");
             firebaseConfig = MOJ_FIREBASE_CONFIG;
             appId = 'malica-manager-v1';
@@ -129,22 +154,47 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-
         const _appVitals = {
-          a_key: atob("MTI0Mw=="), //
-          e_key: atob("MTI0Mw=="), //
-          s_key: atob("MDAwMA==")  //
+          a_key: atob("MTI0Mw=="), 
+          e_key: atob("MTI0Mw=="), 
+          s_key: atob("MDAwMA==") 
         };
 
         const ACCESS_CODE = _appVitals.a_key;
         const EDIT_CODE = _appVitals.e_key;
         const ADMIN_PIN = _appVitals.s_key;
+        
+        const CHART_COLORS = ['#002f55', '#e4b00f', '#10b981', '#f43f5e', '#8b5cf6', '#0ea5e9', '#f97316', '#64748b'];
 
         // ==========================================
         // 2. POMOŽNE FUNKCIJE
         // ==========================================
 
         const money = (val) => Math.round((val + Number.EPSILON) * 100) / 100;
+
+        const triggerFireworks = () => {
+            const duration = 3 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+            const randomInRange = (min, max) => Math.random() * (max - min) + min;
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                const particleCount = 50 * (timeLeft / duration);
+                confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+                confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+            }, 250);
+        };
+
+        const triggerGoldBurst = () => {
+             confetti({
+                particleCount: 150,
+                spread: 100,
+                origin: { y: 0.7 },
+                colors: ['#e4b00f', '#ffd700', '#fceeb5'],
+                disableForReducedMotion: true
+            });
+        };
 
         const getMatrixValue = (entry, member, type) => {
           if (type === 'Z') {
@@ -191,7 +241,7 @@
           const participationCounts = {};
           members.forEach(m => participationCounts[m] = 0);
           history.forEach(e => { 
-            if (e.type !== 'adjustment' && e.participants) {
+             if (e.type !== 'adjustment' && e.participants) {
               e.participants.forEach(p => participationCounts[p] = (participationCounts[p] || 0) + 1);
             }
           });
@@ -211,7 +261,6 @@
           return titles;
         };
 
-        // Matlab Izvoz z avtomatskim obračunom in poravnavo dolgov
         const getMatlabCode = (history, members) => {
           const adjustments = history.filter(e => e.type === 'adjustment');
           const transactions = history.filter(e => e.type !== 'adjustment').reverse();
@@ -226,42 +275,7 @@
           const sRows = transactions.length > 0 ? transactions.map(t => members.map(m => getMatrixValue(t, m, 'S').toFixed(2)).join(', ')) : [members.map(() => '0.00').join(', ')];
           const sStr = `S = [\n  ${sRows.join(';\n   ')}\n]; % Matrika Porabe (S)`;
 
-          const footerStr = `
-        % IZRAČUN KONČNIH BILANC
-        B = Z + sum(P, 1) - sum(S, 1);
-
-        fprintf('\\n--- KONČNA STANJA (Obračun) ---\\n');
-        for i = 1:length(clani)
-            fprintf('%s: %.2f €\\n', clani{i}, B(i));
-        end
-
-        fprintf('\\n--- PREDLAGAN PORAČUN (Navodila za poravnavo) ---\\n');
-        st_clanov = length(clani);
-        [stanja, idx] = sort(B); % Od največjega dolga do največjega upnika
-        upnik_kazalec = st_clanov;
-        dolznik_kazalec = 1;
-
-        while dolznik_kazalec < upnik_kazalec
-            if abs(stanja(dolznik_kazalec)) < 0.01
-                dolznik_kazalec = dolznik_kazalec + 1;
-                continue;
-            end
-            if abs(stanja(upnik_kazalec)) < 0.01
-                upnik_kazalec = upnik_kazalec - 1;
-                continue;
-            end
-            
-            znesek = min(abs(stanja(dolznik_kazalec)), stanja(upnik_kazalec));
-            if znesek > 0
-                fprintf('%s -> %s: %.2f €\\n', clani{idx(dolznik_kazalec)}, clani{idx(upnik_kazalec)}, znesek);
-                stanja(dolznik_kazalec) = stanja(dolznik_kazalec) + znesek;
-                stanja(upnik_kazalec) = stanja(upnik_kazalec) - znesek;
-            end
-            
-            if abs(stanja(dolznik_kazalec)) < 0.01, dolznik_kazalec = dolznik_kazalec + 1; end
-            if abs(stanja(upnik_kazalec)) < 0.01, upnik_kazalec = upnik_kazalec - 1; end
-        end
-        `;
+          const footerStr = `        % IZRAČUN KONČNIH BILANC\n        B = Z + sum(P, 1) - sum(S, 1);\n\n        fprintf('\\n--- KONČNA STANJA (Obračun) ---\\n');\n        for i = 1:length(clani)\n            fprintf('%s: %.2f €\\n', clani{i}, B(i));\n        end\n\n        fprintf('\\n--- PREDLAGAN PORAČUN (Navodila za poravnavo) ---\\n');\n        st_clanov = length(clani);\n        [stanja, idx] = sort(B); % Od največjega dolga do največjega upnika\n        upnik_kazalec = st_clanov;\n        dolznik_kazalec = 1;\n\n        while dolznik_kazalec < upnik_kazalec\n            if abs(stanja(dolznik_kazalec)) < 0.01\n                dolznik_kazalec = dolznik_kazalec + 1;\n                continue;\n            end\n            if abs(stanja(upnik_kazalec)) < 0.01\n                upnik_kazalec = upnik_kazalec - 1;\n                continue;\n            end\n            \n            znesek = min(abs(stanja(dolznik_kazalec)), stanja(upnik_kazalec));\n            if znesek > 0\n                fprintf('%s -> %s: %.2f €\\n', clani{idx(dolznik_kazalec)}, clani{idx(upnik_kazalec)}, znesek);\n                stanja(dolznik_kazalec) = stanja(dolznik_kazalec) + znesek;\n                stanja(upnik_kazalec) = stanja(upnik_kazalec) - znesek;\n            end\n            \n            if abs(stanja(dolznik_kazalec)) < 0.01, dolznik_kazalec = dolznik_kazalec + 1; end\n            if abs(stanja(upnik_kazalec)) < 0.01, upnik_kazalec = upnik_kazalec - 1; end\n        end\n        `;
 
           return `${headerStr}\n${membersStr}\n\n${zStr}\n\n${pStr}\n\n${sStr}\n${footerStr}`; 
         };
@@ -270,12 +284,9 @@
         // 3. UI KOMPONENTE
         // ==========================================
 
-        // --- LUNCH TICKER COMPONENT (ENHANCED) ---
         const LunchTicker = ({ balances, history, memberHunger, dailyMessage }) => {
             const tickerItems = useMemo(() => {
                 const list = [];
-                
-                // 1. Balances
                 Object.entries(balances).forEach(([name, amount]) => {
                     list.push({ 
                         type: 'balance', 
@@ -284,29 +295,24 @@
                     });
                 });
 
-                // 2. Daily Message (High Priority)
                 if (dailyMessage) {
                     list.unshift({ type: 'msg', text: `📢 OBVESTILO: ${dailyMessage}`, color: 'text-yellow-400 font-bold' });
                 }
 
-                // 3. Last Transaction
                 const lastEntry = history.find(e => e.type !== 'adjustment');
                 if (lastEntry) {
                     list.push({ type: 'news', text: `📰 ZADNJE: ${lastEntry.payer} plačal/a "${lastEntry.opis}" (${parseFloat(lastEntry.amount).toFixed(2)}€)`, color: 'text-blue-300' });
                 }
 
-                // 4. Hunger Index
                 const hungryCount = Object.values(memberHunger).filter(v => v).length;
                 const totalMembers = Object.keys(balances).length;
-                if (totalMembers > 0) {
-                     list.push({ type: 'stat', text: `🍔 LAKOTA: ${hungryCount}/${totalMembers}`, color: hungryCount > 0 ? 'text-orange-400' : 'text-slate-400' });
+                if (totalMembers > 0) { 
+                    list.push({ type: 'stat', text: `🍔 LAKOTA: ${hungryCount}/${totalMembers}`, color: hungryCount > 0 ? 'text-orange-400' : 'text-slate-400' });
                 }
 
-                // 5. Market Volume
                 const vol = Object.values(balances).reduce((sum, v) => v > 0 ? sum + v : sum, 0);
                 list.push({ type: 'stat', text: `📊 OBSEG: ${vol.toFixed(2)} €`, color: 'text-purple-300' });
 
-                // 6. Avg Price
                 const recentMeals = history.filter(e => e.type !== 'adjustment').slice(0, 10);
                 if (recentMeals.length > 0) {
                     const totalSpent = recentMeals.reduce((acc, e) => acc + (parseFloat(e.amount)||0), 0);
@@ -320,7 +326,6 @@
 
             if (tickerItems.length === 0) return null;
 
-            // Duplicate content for smooth infinite loop
             const displayItems = [...tickerItems, ...tickerItems, ...tickerItems];
 
             return (
@@ -450,7 +455,6 @@
           );
         };
 
-        // --- MESSAGE MODAL COMPONENT (NEW) ---
         const MessageModal = ({ show, message, setMessage, onConfirm, onCancel }) => {
           if (!show) return null;
           return (
@@ -468,12 +472,12 @@
                 <p className="text-xs text-slate-400 mb-4">Sporočilo bo vidno vsem, dokler se ne vnese nov račun.</p>
                 
                 <textarea 
-                    autoFocus 
-                    value={message} 
-                    onChange={e => setMessage(e.target.value)} 
-                    placeholder="Npr. Danes gremo na burgerje..." 
-                    className="w-full bg-yellow-50/50 border-2 border-yellow-200 rounded-xl py-3 px-4 text-center font-bold text-slate-700 outline-none focus:border-yellow-400 focus:bg-white transition-all min-h-[80px] resize-none mb-4" 
-                    onKeyDown={e => {
+                     autoFocus
+                     value={message}
+                     onChange={e => setMessage(e.target.value)}
+                     placeholder="Npr. Danes gremo na burgerje..."
+                     className="w-full bg-yellow-50/50 border-2 border-yellow-200 rounded-xl py-3 px-4 text-center font-bold text-slate-700 outline-none focus:border-yellow-400 focus:bg-white transition-all min-h-[80px] resize-none mb-4"
+                     onKeyDown={e => {
                         if(e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault();
                             onConfirm();
@@ -557,6 +561,7 @@
                 setCurrentName(finalWinner);
                 setWinner(finalWinner);
                 setIsSpinning(false);
+                triggerFireworks(); 
               }
             };
             spinInterval();
@@ -592,13 +597,14 @@
           if (!show) return null;
           const isEditingAction = pendingAction?.type === 'ADD' || pendingAction?.type === 'ADD_MEMBER';
           const isBlurToggle = pendingAction?.type === 'TOGGLE_BLUR';
+          const isDemoData = pendingAction?.type === 'DEMO_DATA';
           return (
             <div className="fixed inset-0 bg-slate-900/80 z-[60] flex items-center justify-center p-6 backdrop-blur-sm animate-fade-in no-print">
               <div className="bg-white p-6 rounded-3xl w-full max-w-xs shadow-2xl border-2 border-slate-100 text-center">
                 <div className="flex justify-center mb-4"><div className="bg-[#002f55]/10 p-3 rounded-full text-[#002f55]"><Lock size={32} /></div></div>
                 <h3 className="text-xl font-black text-slate-800 mb-2">Varnostna koda</h3>
                 <p className="text-slate-500 text-xs mb-4">
-                  {isBlurToggle ? 'Za vklop/izklop zasebnosti potrebuješ ADMIN PIN.' : (isEditingAction ? 'Za to akcijo je potrebna koda za urejanje.' : 'Za to akcijo je potreben administratorski PIN.')}
+                  {isBlurToggle ? 'Za vklop/izklop zasebnosti potrebuješ ADMIN PIN.' : (isEditingAction || isDemoData ? 'Za to akcijo je potrebna koda za urejanje.' : 'Za to akcijo je potreben administratorski PIN.')}
                 </p>
                 <input type="password" autoFocus value={pin} onChange={e => setPin(e.target.value)} onKeyDown={e => e.key === 'Enter' && onConfirm()} placeholder="••••" className="w-full bg-slate-100 border-2 border-slate-200 rounded-xl py-3 text-center text-2xl font-bold tracking-widest outline-none focus:border-[#e4b00f] mb-2" />
                 {error && <p className="text-rose-500 text-xs font-bold mb-4 animate-bounce">Napačna koda!</p>}
@@ -671,11 +677,15 @@
         const Navigation = ({ activeTab, setActiveTab }) => (
           <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-2 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)] print:hidden z-50">
             <div className="max-w-md mx-auto flex justify-between items-center">
-              <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center p-2 rounded-xl ${activeTab === 'dashboard' ? 'text-[#002f55]' : 'text-slate-400'}`}><TrendingDown size={22} /><span className="text-[10px] mt-1 font-bold">Stanje</span></button>
-              <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center p-2 rounded-xl ${activeTab === 'history' ? 'text-[#002f55]' : 'text-slate-400'}`}><History size={22} /><span className="text-[10px] mt-1 font-bold">Zgodovina</span></button>
+              <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === 'dashboard' ? 'text-[#002f55] bg-slate-100 scale-105' : 'text-slate-400'}`}><TrendingDown size={22} /><span className="text-[10px] mt-1 font-bold">Stanje</span></button>
+              
+              <button onClick={() => setActiveTab('analytics')} className={`flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === 'analytics' ? 'text-[#002f55] bg-slate-100 scale-105' : 'text-slate-400'}`}><Activity size={22} /><span className="text-[10px] mt-1 font-bold">Analitika</span></button>
+              
               <div className="relative -top-8"><button onClick={() => setActiveTab('add')} className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl ${activeTab === 'add' ? 'bg-[#002f55] border-[#e4b00f]' : 'bg-[#002f55] border-white'} border-4 text-[#e4b00f] active:scale-90 transition-all`}><PlusCircle size={32} /></button></div>
-              <button onClick={() => setActiveTab('settle')} className={`flex flex-col items-center p-2 rounded-xl ${activeTab === 'settle' ? 'text-[#002f55]' : 'text-slate-400'}`}><Calculator size={22} /><span className="text-[10px] mt-1 font-bold">Obračun</span></button>
-              <button onClick={() => setActiveTab('matrix')} className={`flex flex-col items-center p-2 rounded-xl ${activeTab === 'matrix' ? 'text-[#002f55]' : 'text-slate-400'}`}><Grid size={22} /><span className="text-[10px] mt-1 font-bold">Matrike</span></button>
+              
+              <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === 'history' ? 'text-[#002f55] bg-slate-100 scale-105' : 'text-slate-400'}`}><History size={22} /><span className="text-[10px] mt-1 font-bold">Zgodovina</span></button>
+              
+              <button onClick={() => setActiveTab('settle')} className={`flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === 'settle' ? 'text-[#002f55] bg-slate-100 scale-105' : 'text-slate-400'}`}><Calculator size={22} /><span className="text-[10px] mt-1 font-bold">Obračun</span></button>
             </div>
           </nav>
         );
@@ -683,6 +693,169 @@
         // ==========================================
         // 4. ZAVIHKI
         // ==========================================
+
+        const TabAnalytics = ({ history, members, setActiveTab }) => {
+            const pieData = useMemo(() => {
+                const consumption = {};
+                members.forEach(m => consumption[m] = 0);
+                
+                history.forEach(entry => {
+                    if (entry.type !== 'adjustment') {
+                        members.forEach(m => {
+                            consumption[m] += getMatrixValue(entry, m, 'S');
+                        });
+                    }
+                });
+
+                return Object.keys(consumption)
+                    .map(name => ({ name, value: consumption[name] }))
+                    .filter(item => item.value > 0)
+                    .sort((a, b) => b.value - a.value);
+            }, [history, members]);
+
+            const timeData = useMemo(() => {
+                const validHistory = history.filter(h => h.date);
+                const sortedHistory = [...validHistory].sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                let currentBalances = {};
+                members.forEach(m => currentBalances[m] = 0);
+                
+                const dataPoints = [];
+
+                // Dodaj začetno točko (če ni zgodovine, da ne bo prazno)
+                if (sortedHistory.length > 0) {
+                    const firstDate = new Date(sortedHistory[0].date);
+                    firstDate.setDate(firstDate.getDate() - 1);
+                    dataPoints.push({
+                        date: 'Start',
+                        fullDate: firstDate.toISOString(),
+                        ...currentBalances
+                    });
+                }
+
+                sortedHistory.forEach(entry => {
+                    if (entry.type === 'adjustment') {
+                        currentBalances[entry.user] = (currentBalances[entry.user] || 0) + entry.amount;
+                    } else {
+                        if (entry.payer) currentBalances[entry.payer] += (parseFloat(entry.amount) || 0);
+                        members.forEach(m => {
+                            const consumed = getMatrixValue(entry, m, 'S');
+                            currentBalances[m] -= consumed;
+                        });
+                    }
+                    
+                    const point = { 
+                        date: new Date(entry.date).toLocaleDateString('sl-SI', { day: 'numeric', month: 'short' }),
+                        fullDate: entry.date,
+                        ...currentBalances 
+                    };
+                    members.forEach(m => point[m] = parseFloat(point[m].toFixed(2)));
+                    dataPoints.push(point);
+                });
+
+                return dataPoints.length > 30 ? dataPoints.slice(dataPoints.length - 30) : dataPoints;
+            }, [history, members]);
+
+            if (history.length === 0) {
+                 return (
+                    <div className="flex flex-col items-center justify-center h-[50vh] text-slate-400 animate-fade-in">
+                        <BarChart3 size={64} className="mb-4 text-slate-200" />
+                        <p className="font-bold">Ni podatkov za analizo.</p>
+                        <p className="text-xs text-slate-400 text-center px-8 mt-2">Pojdi v Nastavitve in klikni "Generiraj Demo Podatke" za hiter test.</p>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="space-y-6 pb-20 animate-fade-in">
+                    <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 px-2">
+                        <Activity className="text-[#002f55]" /> Pametna Analitika
+                    </h3>
+
+                    <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
+                        <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <IconPieChart size={16} /> Kdo je največ pojedel?
+                        </h4>
+                        <div className="h-64 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={pieData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={60}
+                                        outerRadius={80}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                    >
+                                        {pieData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <RechartsTooltip 
+                                        formatter={(value) => `${value.toFixed(2)} €`}
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    />
+                                    <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }}/>
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                        <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <TrendingDown size={16} /> Gibanje stanja (Trend)
+                        </h4>
+                        <div className="h-64 w-full -ml-2">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={timeData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis 
+                                        dataKey="date" 
+                                        tick={{fontSize: 9, fill: '#94a3b8'}} 
+                                        tickLine={false} 
+                                        axisLine={false} 
+                                        interval="preserveStartEnd"
+                                    />
+                                    <YAxis 
+                                        tick={{fontSize: 9, fill: '#94a3b8'}} 
+                                        tickLine={false} 
+                                        axisLine={false} 
+                                        tickFormatter={(val) => `${val}€`}
+                                        width={35}
+                                    />
+                                    <ReferenceLine y={0} stroke="#cbd5e1" strokeDasharray="3 3" />
+                                    <RechartsTooltip 
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
+                                    />
+                                    {members.map((m, i) => (
+                                        <Line 
+                                            key={m}
+                                            type="monotone" 
+                                            dataKey={m} 
+                                            stroke={CHART_COLORS[i % CHART_COLORS.length]} 
+                                            strokeWidth={2}
+                                            dot={false}
+                                            activeDot={{ r: 4 }}
+                                        />
+                                    ))}
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <p className="text-[10px] text-slate-300 text-center mt-2 italic">Graf prikazuje, kdo pleza v plus in kdo tone v minus skozi čas.</p>
+                    </div>
+
+                    {/* GUMB DO MATRIK */}
+                    <button 
+                        onClick={() => setActiveTab('matrix')} 
+                        className="w-full py-4 bg-slate-100 text-slate-600 font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-200 transition-all border border-slate-200"
+                    >
+                        <Grid size={20} /> Podroben pregled matrik <ArrowRight size={16} />
+                    </button>
+                </div>
+            );
+        };
+
 
         const TabDashboard = ({ payerRanking, balances, setActiveTab, titles, onOpenRoulette, isBlurred, onToggleBlur, onOpenStats, memberHunger, onToggleHunger, dailyMessage, onEditMessage }) => (
           <div className="space-y-6 animate-fade-in">
@@ -704,8 +877,8 @@
                     </button>
                 </div>
             ) : (
-                <div className="flex justify-end -mb-2">
-                     <button onClick={onEditMessage} className="text-slate-300 hover:text-[#002f55] transition-colors p-2 rounded-full hover:bg-slate-100" title="Dodaj sporočilo">
+                <div className="flex justify-end -mb-2"> 
+                    <button onClick={onEditMessage} className="text-slate-300 hover:text-[#002f55] transition-colors p-2 rounded-full hover:bg-slate-100" title="Dodaj sporočilo">
                         <PenLine size={18} />
                     </button>
                 </div>
@@ -748,7 +921,7 @@
                             {memberTitles.map((t, i) => (
                                 <div 
                                 key={i} 
-                                title={t.label}
+                                title={t.label} 
                                 className={`flex items-center justify-center w-6 h-6 rounded-lg border ${t.bg} ${t.color}`}
                                 >
                                 <t.icon size={14} />
@@ -783,9 +956,9 @@
             <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-100 overflow-hidden"><div className="overflow-x-auto custom-scrollbar pb-2"><table className="w-full text-xs whitespace-nowrap"><thead><tr className="border-b border-slate-100 bg-slate-50/50"><th className="p-3 text-left font-bold text-slate-400">Datum</th>{members.map(m => (<th key={m} className="p-3 text-right font-bold text-slate-600">{m.substring(0, 3)}</th>))}<th className="p-3 text-right font-black text-slate-800">Σ</th></tr></thead><tbody>{matrixType === 'Z' && (() => { const adjustments = history.filter(e => e.type === 'adjustment'); const rowSum = members.reduce((sum, m) => sum + adjustments.reduce((s, e) => s + (e.user === m ? e.amount : 0), 0), 0); return (<tr className="border-b-2 border-[#002f55]/20 bg-[#002f55]/5 text-xs"><td className="p-3 font-bold text-[#002f55] border-r border-[#002f55]/20">Začetno stanje <span className="block text-[9px] font-normal text-[#002f55]/60">Prenos</span></td>{members.map(m => { const val = adjustments.reduce((s, e) => s + (e.user === m ? e.amount : 0), 0); return (<td key={m} className={`p-3 text-right tabular-nums ${val !== 0 ? (val >= 0 ? 'text-emerald-600' : 'text-rose-500') : 'text-slate-400'}`}>{val !== 0 ? (val > 0 ? '+' : '') + val.toFixed(1) : '0.0'}</td>); })}<td className="p-3 text-right font-black text-[#002f55] bg-[#002f55]/10">{rowSum !== 0 ? (rowSum > 0 ? '+' : '') + rowSum.toFixed(1) : '0.0'}</td></tr>); })()}{history.map(entry => { if (matrixType === 'Z' || (matrixType !== 'Z' && entry.type === 'adjustment')) return null; const rowSum = members.reduce((sum, m) => sum + getMatrixValue(entry, m, matrixType), 0); return (<tr key={entry.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors"><td className="p-3 text-slate-500 font-medium border-r border-slate-50">{new Date(entry.date).toLocaleDateString('sl-SI', { day: 'numeric', month: 'numeric' })} <span className="text-[9px] text-slate-300 ml-1">{entry.opis.substring(0, 8)}</span></td>{members.map(m => { const val = getMatrixValue(entry, m, matrixType); return (<td key={m} className={`p-3 text-right tabular-nums ${val !== 0 ? (matrixType === 'S' ? 'text-rose-500' : (matrixType === 'Z' ? (val > 0 ? 'text-emerald-600' : 'text-rose-500') : 'text-[#002f55] font-bold')) : 'text-slate-200'}`}>{val !== 0 ? val.toFixed(1) : '-'}</td>) })}<td className="p-3 text-right font-bold text-slate-800 bg-slate-50/30">{rowSum.toFixed(1)}</td></tr>) })}</tbody><tfoot><tr className="bg-slate-100 font-black text-slate-700"><td className="p-3">SKUPAJ</td>{members.map(m => { const colSum = history.reduce((sum, e) => { if (matrixType === 'Z') return sum + (e.type === 'adjustment' && e.user === m ? (parseFloat(e.amount) || 0) : 0); return e.type === 'adjustment' ? sum : sum + getMatrixValue(e, m, matrixType); }, 0); return <td key={m} className="p-3 text-right">{colSum.toFixed(1)}</td> })}<td className="p-3 text-right">{history.reduce((tot, e) => { if ((matrixType === 'Z' && e.type !== 'adjustment') || (matrixType !== 'Z' && e.type === 'adjustment')) return tot; return tot + parseFloat(e.amount || 0); }, 0).toFixed(1)}</td></tr></tfoot></table></div></div><button onClick={onPrint} className="w-full mt-4 py-3 bg-[#002f55]/5 text-[#002f55] font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-[#002f55]/10 transition-all border border-[#002f55]/10"><Printer size={18} /> Shrani PDF Poročilo</button></div>
         );
 
-        const TabAddEntry = ({
-          addEntry, amount, setAmount, payer, setPayer, members, selectedParticipants, setSelectedParticipants,
-          date, setDate, splitType, setSplitType, manualAmounts, setManualAmounts, isManualBalanced
+        const TabAddEntry = ({ 
+          addEntry, amount, setAmount, payer, setPayer, members, selectedParticipants, setSelectedParticipants, 
+          date, setDate, splitType, setSplitType, manualAmounts, setManualAmounts, isManualBalanced 
         }) => (
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 animate-fade-in">
             <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2"><PlusCircle className="text-[#002f55]" /> Nov račun</h3>
@@ -860,7 +1033,7 @@
           </div>
         );
 
-        const TabSettings = ({ members, history, removeMember, showAddMember, setShowAddMember, newMemberName, setNewMemberName, addMember }) => (
+        const TabSettings = ({ members, history, removeMember, showAddMember, setShowAddMember, newMemberName, setNewMemberName, addMember, generateDemoData }) => (
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 animate-fade-in">
             <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2"><UserPlus className="text-[#002f55]" /> Ekipa</h3>
             <div className="space-y-2 mb-6">
@@ -874,7 +1047,17 @@
             {!showAddMember ? (
               <button onClick={() => setShowAddMember(true)} className="w-full py-4 border-2 border-dashed border-slate-200 text-slate-400 rounded-2xl flex items-center justify-center gap-2 font-bold text-xs">DODAJ ČLANA</button>
             ) : (
-              <div className="flex gap-2"><input autoFocus type="text" value={newMemberName} onChange={e => setNewMemberName(e.target.value)} placeholder="Ime..." className="flex-1 p-3 bg-slate-100 rounded-xl outline-none" onKeyDown={e => e.key === 'Enter' && addMember()} /><button onClick={addMember} className="bg-[#002f55] text-white px-6 rounded-xl font-black">DODAJ</button></div>
+              <div className="flex gap-2 mb-4"><input autoFocus type="text" value={newMemberName} onChange={e => setNewMemberName(e.target.value)} placeholder="Ime..." className="flex-1 p-3 bg-slate-100 rounded-xl outline-none" onKeyDown={e => e.key === 'Enter' && addMember()} /><button onClick={addMember} className="bg-[#002f55] text-white px-6 rounded-xl font-black">DODAJ</button></div>
+            )}
+            
+            {/* GUMB ZA DEMO PODATKE */}
+            {history.length === 0 && members.length > 0 && (
+                <div className="mt-8 pt-4 border-t border-slate-100">
+                    <p className="text-xs text-slate-400 mb-2 text-center">Baza je prazna. Želiš testne podatke?</p>
+                    <button onClick={generateDemoData} className="w-full py-3 bg-indigo-50 text-indigo-600 font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-indigo-100 transition-all border border-indigo-100">
+                        <Database size={16} /> Generiraj Demo Podatke
+                    </button>
+                </div>
             )}
           </div>
         );
@@ -890,11 +1073,11 @@
           const [authError, setAuthError] = useState(false); 
 
           const [members, setMembers] = useState([]); 
-          const [memberHunger, setMemberHunger] = useState({}); // New: Hunger state
+          const [memberHunger, setMemberHunger] = useState({}); 
           const [history, setHistory] = useState([]); 
           const [loading, setLoading] = useState(true); 
 
-          const [globalSettings, setGlobalSettings] = useState({ isBlurred: false, dailyMessage: "" }); // Updated: dailyMessage
+          const [globalSettings, setGlobalSettings] = useState({ isBlurred: false, dailyMessage: "" }); 
 
           const [activeTab, setActiveTab] = useState('dashboard'); 
           const [showAddMember, setShowAddMember] = useState(false); 
@@ -922,10 +1105,9 @@
           const [showRoulette, setShowRoulette] = useState(false);
           const [showStats, setShowStats] = useState(false); 
 
-          // New: State for Message Modal
           const [showMessageModal, setShowMessageModal] = useState(false);
           const [messageInput, setMessageInput] = useState("");
-           
+          
           // --- 1. PRIJAVA IN SINHRONIZACIJA ---
           useEffect(() => {
             const initAuth = async () => {
@@ -961,11 +1143,11 @@
             const unsubMembers = onSnapshot(membersRef, (snapshot) => {
               const mList = [];
               const mHunger = {}; 
-              snapshot.docs.forEach(doc => {
+              snapshot.docs.forEach(doc => { 
                  const d = doc.data();
                  mList.push(d.name);
                  if (d.isHungry) mHunger[d.name] = true; 
-              });
+               }); 
               
               if (mList.length === 0 && loading) {
                 const defaults = ["Martin", "Mitja", "Pavel", "Matej", "Zala", "Stela"];
@@ -991,16 +1173,15 @@
           useEffect(() => {
             if (members.length > 0) {
               if (!payer || !members.includes(payer)) setPayer(members[0]);
-              // Check if this is the initial load (empty selection)
               if (selectedParticipants.length === 0) setSelectedParticipants([...members]);
             }
-          }, [members]); // Fix: Removed selectedParticipants.length and payer from deps
+          }, [members]); 
 
           // --- 2. IZRAČUNI ---
           const balances = useMemo(() => {
             const b = {};
-            members.forEach(m => b[m] = 0);
-             
+            members.forEach(m => b[m] = 0); 
+            
             history.forEach(entry => {
               if (entry.user && !b.hasOwnProperty(entry.user)) b[entry.user] = 0;
               if (entry.payer && !b.hasOwnProperty(entry.payer)) b[entry.payer] = 0;
@@ -1037,8 +1218,8 @@
 
           const titles = useMemo(() => {
             return calculateTitles(members, balances, history);
-          }, [members, balances, history]);
-           
+          }, [members, balances, history]); 
+          
           const settlements = useMemo(() => {
             const bCopy = { ...balances };
             const debtors = [], creditors = [];
@@ -1047,8 +1228,8 @@
               else if (v > 0.01) creditors.push({ n, v });
             });
             debtors.sort((a, b) => b.v - a.v);
-            creditors.sort((a, b) => b.v - a.v);
-             
+            creditors.sort((a, b) => b.v - a.v); 
+            
             const res = [];
             let di = 0, ci = 0;
             while (di < debtors.length && ci < creditors.length) {
@@ -1085,8 +1266,8 @@
           const handleAddEntrySubmit = async (e) => {
             e.preventDefault();
             if (!user || !amount || selectedParticipants.length === 0) return;
-            if (splitType === 'manual' && !isManualBalanced) return;
-             
+            if (splitType === 'manual' && !isManualBalanced) return; 
+            
             setPendingAction({ type: 'ADD' });
             setAdminPinInput('');
             setAdminAuthError(false);
@@ -1115,16 +1296,16 @@
             const batch = writeBatch(db);
 
             const data = { 
-              date, 
-              payer, 
-              amount: parseFloat(amount), 
-              participants: [...selectedParticipants], 
-              splitType, 
-              timestamp: Date.now(), 
-              opis: document.getElementById('opis-input')?.value || 'Malica' 
-            };
-            if (splitType === 'manual') data.manualAmounts = { ...manualAmounts };
-             
+               date, 
+               payer, 
+               amount: parseFloat(amount), 
+               participants: [...selectedParticipants], 
+               splitType, 
+               timestamp: Date.now(), 
+               opis: document.getElementById('opis-input')?.value || 'Malica' 
+             };
+            if (splitType === 'manual') data.manualAmounts = { ...manualAmounts }; 
+            
             // 1. Dodaj vnos v zgodovino
             const historyRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'history'));
             batch.set(historyRef, data);
@@ -1142,6 +1323,8 @@
             batch.set(settingsRef, { dailyMessage: "" }, { merge: true });
 
             await batch.commit();
+
+            triggerGoldBurst();
 
             setAmount('');
             setManualAmounts({});
@@ -1193,8 +1376,52 @@
             if (!user) return;
             const isHungry = !!memberHunger[name];
             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', name), { 
-                isHungry: !isHungry 
-            }, { merge: true });
+                 isHungry: !isHungry 
+             }, { merge: true });
+          };
+
+          const handleGenerateDemoData = () => {
+              setPendingAction({ type: 'DEMO_DATA' });
+              setAdminPinInput('');
+              setAdminAuthError(false);
+              setShowAdminAuth(true);
+          };
+
+          const performGenerateDemoData = async () => {
+              if (!user || members.length < 2) return;
+              
+              const batch = writeBatch(db);
+              const demoDescriptions = ["Petkova Pica", "Kave za ekipo", "Burek", "Kitajska restavracija", "Rojstni dan", "Sendviči", "Pijača po službi", "Zajtrk", "Burgerji", "Sladoled"];
+              
+              // Generiraj 15 naključnih transakcij
+              for (let i = 0; i < 15; i++) {
+                  const randomPayer = members[Math.floor(Math.random() * members.length)];
+                  const randomAmount = Math.floor(Math.random() * 50) + 5;
+                  const randomDesc = demoDescriptions[Math.floor(Math.random() * demoDescriptions.length)];
+                  
+                  // Generiraj naključne udeležence (vsaj 2)
+                  const shuffled = [...members].sort(() => 0.5 - Math.random());
+                  const participants = shuffled.slice(0, Math.max(2, Math.floor(Math.random() * members.length)));
+                  
+                  // Datum v zadnjih 30 dneh
+                  const date = new Date();
+                  date.setDate(date.getDate() - Math.floor(Math.random() * 30));
+                  const dateStr = date.toISOString().split('T')[0];
+
+                  const historyRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'history'));
+                  batch.set(historyRef, {
+                      date: dateStr,
+                      payer: randomPayer,
+                      amount: randomAmount,
+                      participants: participants,
+                      splitType: 'equal',
+                      timestamp: Date.now() - (i * 100000), // Da ohranimo nek vrstni red
+                      opis: randomDesc
+                  });
+              }
+              await batch.commit();
+              triggerFireworks();
+              setActiveTab('analytics');
           };
 
           const verifyAdminPin = async () => {
@@ -1203,7 +1430,7 @@
             let valid = false;
 
             if ((action === 'DELETE' || action === 'RESET' || action === 'TOGGLE_BLUR') && pin === ADMIN_PIN) valid = true;
-            else if ((action === 'ADD' || action === 'ADD_MEMBER') && (pin === EDIT_CODE || pin === ADMIN_PIN)) valid = true;
+            else if ((action === 'ADD' || action === 'ADD_MEMBER' || action === 'DEMO_DATA') && (pin === EDIT_CODE || pin === ADMIN_PIN)) valid = true;
 
             if (valid) {
               setShowAdminAuth(false);
@@ -1221,6 +1448,8 @@
               } else if (action === 'TOGGLE_BLUR') {
                 const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
                 await setDoc(settingsRef, { isBlurred: !globalSettings.isBlurred });
+              } else if (action === 'DEMO_DATA') {
+                  performGenerateDemoData();
               }
               setPendingAction(null);
             } else {
@@ -1242,13 +1471,13 @@
                 const v = parseFloat(val) || 0;
                 if (Math.abs(v) < 0.01) continue;
                 batch.set(doc(historyRef), { 
-                  type: 'adjustment', 
-                  user: name, 
-                  amount: v, 
-                  timestamp: Date.now(), 
-                  date: new Date().toISOString().split('T')[0], 
-                  opis: 'Začetno stanje' 
-                });
+                   type: 'adjustment', 
+                   user: name, 
+                   amount: v, 
+                   timestamp: Date.now(), 
+                   date: new Date().toISOString().split('T')[0], 
+                   opis: 'Začetno stanje' 
+                 });
               }
               await batch.commit();
               setShowResetConfirm(false);
@@ -1299,11 +1528,11 @@
                     
                     /* Print container styling */
                     .print-container { 
-                        font-family: sans-serif; 
-                        font-size: 10px; 
-                        color: black; 
-                        background: white; 
-                    }
+                         font-family: sans-serif; 
+                         font-size: 10px; 
+                         color: black; 
+                         background: white; 
+                     }
 
                     /* Ensure tables print nicely */
                     table { width: 100%; border-collapse: collapse; }
@@ -1348,11 +1577,11 @@
               <main className="max-w-md mx-auto px-4 print:hidden">
                 {activeTab === 'dashboard' && (
                   <TabDashboard 
-                    payerRanking={payerRanking} 
-                    balances={balances} 
-                    setActiveTab={setActiveTab} 
-                    titles={titles} 
-                    onOpenRoulette={() => setShowRoulette(true)}
+                     payerRanking={payerRanking} 
+                     balances={balances} 
+                     setActiveTab={setActiveTab} 
+                     titles={titles} 
+                     onOpenRoulette={() => setShowRoulette(true)}
                     isBlurred={globalSettings.isBlurred}
                     onToggleBlur={handleToggleBlur}
                     onOpenStats={() => setShowStats(true)} 
@@ -1362,30 +1591,35 @@
                     onEditMessage={openMessageModal}
                   />
                 )}
+                
+                {/* AKTIVACIJA NOVEGA ZAVIHEKA */}
+                {activeTab === 'analytics' && <TabAnalytics history={history} members={members} setActiveTab={setActiveTab} />}
+                
                 {activeTab === 'matrix' && <TabMatrix members={members} history={history} matrixType={matrixType} setMatrixType={setMatrixType} onPrint={handlePrintReport} />}
                 {activeTab === 'add' && (
-                  <TabAddEntry
-                    addEntry={handleAddEntrySubmit} amount={amount} setAmount={setAmount} payer={payer} setPayer={setPayer} members={members}
-                    selectedParticipants={selectedParticipants} setSelectedParticipants={setSelectedParticipants}
-                    date={date} setDate={setDate} splitType={splitType} setSplitType={setSplitType}
-                    manualAmounts={manualAmounts} setManualAmounts={setManualAmounts} isManualBalanced={isManualBalanced}
+                  <TabAddEntry 
+                    addEntry={handleAddEntrySubmit} amount={amount} setAmount={setAmount} payer={payer} setPayer={setPayer} members={members} 
+                    selectedParticipants={selectedParticipants} setSelectedParticipants={setSelectedParticipants} 
+                    date={date} setDate={setDate} splitType={splitType} setSplitType={setSplitType} 
+                    manualAmounts={manualAmounts} setManualAmounts={setManualAmounts} isManualBalanced={isManualBalanced} 
                   />
                 )}
                 {activeTab === 'history' && <TabHistory history={history} confirmDeleteEntry={confirmDeleteEntry} />}
                 {activeTab === 'settle' && (
-                  <TabSettlement
-                    settlements={settlements} onPrint={handlePrintReport} showResetConfirm={showResetConfirm} setShowResetConfirm={setShowResetConfirm}
-                    manualStartBalances={manualStartBalances} setManualStartBalances={setManualStartBalances} members={members}
-                    balances={balances} isResetBalanced={isResetBalanced} isResetting={isResetting} finalizeReset={finalizeReset}
-                    startResetProcess={startResetProcess} historyLength={history.length}
+                  <TabSettlement 
+                    settlements={settlements} onPrint={handlePrintReport} showResetConfirm={showResetConfirm} setShowResetConfirm={setShowResetConfirm} 
+                    manualStartBalances={manualStartBalances} setManualStartBalances={setManualStartBalances} members={members} 
+                    balances={balances} isResetBalanced={isResetBalanced} isResetting={isResetting} finalizeReset={finalizeReset} 
+                    startResetProcess={startResetProcess} historyLength={history.length} 
                     onOpenSettings={() => setActiveTab('settings')}
                   />
                 )}
                 {activeTab === 'settings' && (
-                  <TabSettings
-                    members={members} history={history} removeMember={removeMember}
-                    showAddMember={showAddMember} setShowAddMember={setShowAddMember}
-                    newMemberName={newMemberName} setNewMemberName={setNewMemberName} addMember={addMemberAction}
+                  <TabSettings 
+                    members={members} history={history} removeMember={removeMember} 
+                    showAddMember={showAddMember} setShowAddMember={setShowAddMember} 
+                    newMemberName={newMemberName} setNewMemberName={setNewMemberName} addMember={addMemberAction} 
+                    generateDemoData={handleGenerateDemoData}
                   />
                 )}
               </main>
@@ -1396,7 +1630,7 @@
         }
 
         const root = createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(<ErrorBoundary><App /></ErrorBoundary>);
     </script>
 </body>
 </html>

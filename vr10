@@ -29,9 +29,6 @@
     <!-- Babel za prevajanje JSX v brskalniku -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- ES Module Shims: NUJNO za podporo na starejših iOS (iPhone) napravah -->
-    <script async src="https://ga.jspm.io/npm:es-module-shims@1.7.0/dist/es-module-shims.js"></script>
-
     <!-- Import Map za knjižnice (omogoča 'import ... from ...' sintakso) -->
     <script type="importmap">
     {
@@ -129,11 +126,10 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Skrite kode (Base64) - Kirurško zamenjane in zamaskirane
         const _appVitals = {
           a_key: atob("MTI0Mw=="),
           e_key: atob("MTI0Mw=="),
-          s_key: atob("MDAwMA==") 
+          s_key: atob("MDAwMA==")  
         };
 
         const ACCESS_CODE = _appVitals.a_key;

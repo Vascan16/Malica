@@ -91,13 +91,12 @@
         // (Ko teče v Canvasu, se to ignorira)
         // ---------------------------------------------------------
         const MOJ_FIREBASE_CONFIG = {
-          apiKey: "AIzaSyBjoIbXZEELew5F1zVnYzUbStp0IfVAwgg",
-          authDomain: "malicamanagerpro.firebaseapp.com",
-          projectId: "malicamanagerpro",
-          storageBucket: "malicamanagerpro.firebasestorage.app",
-          messagingSenderId: "902764840464",
-          appId: "1:902764840464:web:7ad08867d6c6593efd2c95",
-          measurementId: "G-WDP7KK30QQ"
+            apiKey: "PRILEPI_SVOJ_API_KEY",
+            authDomain: "tvoj-projekt.firebaseapp.com",
+            projectId: "tvoj-projekt-id",
+            storageBucket: "tvoj-projekt.appspot.com",
+            messagingSenderId: "tvoj-sender-id",
+            appId: "tvoj-app-id"
         };
         // ---------------------------------------------------------
 
@@ -126,10 +125,11 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // Skrite kode (Base64) - Kirurško zamenjane in zamaskirane
         const _appVitals = {
-          a_key: atob("MTI0Mw=="),
-          e_key: atob("MTI0Mw=="),
-          s_key: atob("MDAwMA==")  
+          a_key: atob("MTI0Mw=="), // 1243
+          e_key: atob("MTI0Mw=="), // 1243
+          s_key: atob("MDAwMA==")  // 0000
         };
 
         const ACCESS_CODE = _appVitals.a_key;

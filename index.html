@@ -80,7 +80,8 @@
           AlertTriangle, FileText, CheckSquare, Square, Lock, Info, Scale, 
           ListOrdered, RefreshCcw, Save, Table, Grid, Printer, Bell, X, 
           Crown, PiggyBank, Ghost, Medal, Dices, Eye, EyeOff, BarChart3, Pizza, Settings, Utensils, StickyNote, PenLine,
-          PieChart as IconPieChart, Activity, Database, ArrowRight, Play, Pause, RotateCcw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Gamepad2, Moon, Sun
+          PieChart as IconPieChart, Activity, Database, ArrowRight, Play, Pause, RotateCcw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Gamepad2, Moon, Sun,
+          Sigma, BookOpen
         } from 'lucide-react';
         
         // --- RECHARTS IMPORTS ---
@@ -347,8 +348,9 @@
                 <div className="p-6 bg-[#002f55] dark:bg-slate-950 text-white flex justify-between items-center shrink-0">
                   <h2 className="text-xl font-black flex items-center gap-2"><BarChart3 /> Statistika</h2>
                   <div className="flex items-center gap-1">
-                      <button onClick={() => { onClose(); onOpenGame(); }} className="p-2 hover:bg-white/10 rounded-full transition-colors text-[#e4b00f]" title="Čakaš na malico? 🐍">
-                          <Gamepad2 size={24} />
+                      {/* STEALTH GAME ICON */}
+                      <button onClick={() => { onClose(); onOpenGame(); }} className="p-2 text-white/10 hover:text-white transition-colors duration-500 rounded-full">
+                          <Sigma size={24} />
                       </button>
                       <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X /></button>
                   </div>
@@ -455,6 +457,39 @@
               </div>
             </div>
           );
+        };
+        
+        // --- NEW COMPONENT: INSTRUCTIONS EDIT MODAL ---
+        const InstructionsEditModal = ({ show, instructions, setInstructions, onConfirm, onCancel }) => {
+            if (!show) return null;
+            return (
+                <div className="fixed inset-0 bg-slate-900/80 z-[95] flex items-center justify-center p-6 backdrop-blur-sm animate-fade-in no-print">
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl w-full max-w-md shadow-2xl border-2 border-slate-100 dark:border-slate-700 flex flex-col max-h-[85vh]">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-full text-[#002f55] dark:text-[#e4b00f]">
+                                <BookOpen size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black text-slate-800 dark:text-white">Uredi Navodila</h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">Vidno vsem uporabnikom v nastavitvah.</p>
+                            </div>
+                        </div>
+                        
+                        <textarea 
+                            autoFocus
+                            value={instructions}
+                            onChange={e => setInstructions(e.target.value)}
+                            placeholder="Vpiši navodila, pravila igre, IBAN..."
+                            className="w-full flex-1 bg-slate-50 dark:bg-slate-900/50 border-2 border-slate-200 dark:border-slate-700 rounded-xl p-4 font-mono text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-[#002f55] dark:focus:border-[#e4b00f] transition-all min-h-[200px] resize-none mb-4 custom-scrollbar"
+                        />
+                        
+                        <div className="flex gap-2 mt-auto">
+                            <button onClick={onCancel} className="flex-1 py-3 text-slate-400 font-bold bg-slate-50 dark:bg-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors">Prekliči</button>
+                            <button onClick={onConfirm} className="flex-1 py-3 bg-[#002f55] dark:bg-[#e4b00f] text-white dark:text-[#002f55] font-bold rounded-xl shadow-lg hover:opacity-90 transition-opacity">Shrani</button>
+                        </div>
+                    </div>
+                </div>
+            );
         };
 
         const AuthScreen = ({ inputCode, setInputCode, checkAccess, authError }) => (
@@ -805,13 +840,14 @@
           const isEditingAction = pendingAction?.type === 'ADD' || pendingAction?.type === 'ADD_MEMBER';
           const isBlurToggle = pendingAction?.type === 'TOGGLE_BLUR';
           const isDarkModeToggle = pendingAction?.type === 'TOGGLE_DARK_MODE';
+          const isEditInstructions = pendingAction?.type === 'EDIT_INSTRUCTIONS';
           return (
             <div className="fixed inset-0 bg-slate-900/80 z-[60] flex items-center justify-center p-6 backdrop-blur-sm animate-fade-in no-print">
               <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl w-full max-w-xs shadow-2xl border-2 border-slate-100 dark:border-slate-700 text-center">
                 <div className="flex justify-center mb-4"><div className="bg-[#002f55]/10 dark:bg-slate-700 p-3 rounded-full text-[#002f55] dark:text-white"><Lock size={32} /></div></div>
                 <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2">Varnostna koda</h3>
                 <p className="text-slate-500 dark:text-slate-400 text-xs mb-4">
-                  {isBlurToggle || isDarkModeToggle ? 'Za to akcijo potrebuješ ADMIN PIN.' : (isEditingAction ? 'Za to akcijo je potrebna koda za urejanje.' : 'Za to akcijo je potreben administratorski PIN.')}
+                  {isBlurToggle || isDarkModeToggle || isEditInstructions ? 'Za to akcijo potrebuješ ADMIN PIN.' : (isEditingAction ? 'Za to akcijo je potrebna koda za urejanje.' : 'Za to akcijo je potreben administratorski PIN.')}
                 </p>
                 <input type="password" inputMode="numeric" autoFocus value={pin} onChange={e => setPin(e.target.value)} onKeyDown={e => e.key === 'Enter' && onConfirm()} placeholder="••••" className="w-full bg-slate-100 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 rounded-xl py-3 text-center text-2xl font-bold tracking-widest outline-none focus:border-[#e4b00f] dark:text-white mb-2" />
                 {error && <p className="text-rose-500 text-xs font-bold mb-4 animate-bounce">Napačna koda!</p>}
@@ -1281,7 +1317,7 @@
           </div>
         );
 
-        const TabSettings = ({ members, history, removeMember, showAddMember, setShowAddMember, newMemberName, setNewMemberName, addMember, darkMode, toggleDarkMode }) => (
+        const TabSettings = ({ members, history, removeMember, showAddMember, setShowAddMember, newMemberName, setNewMemberName, addMember, darkMode, toggleDarkMode, instructions, onEditInstructions }) => (
           <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 animate-fade-in transition-colors">
             
             {/* DARK MODE TOGGLE */}
@@ -1319,6 +1355,19 @@
             ) : (
               <div className="flex gap-2 mb-4"><input autoFocus type="text" value={newMemberName} onChange={e => setNewMemberName(e.target.value)} placeholder="Ime..." className="flex-1 p-3 bg-slate-100 dark:bg-slate-700 dark:text-white rounded-xl outline-none" onKeyDown={e => e.key === 'Enter' && addMember()} /><button onClick={addMember} className="bg-[#002f55] dark:bg-[#e4b00f] text-white dark:text-[#002f55] px-6 rounded-xl font-black">DODAJ</button></div>
             )}
+            
+            {/* INSTRUCTIONS SECTION */}
+            <div className="mt-8 border-t border-slate-100 dark:border-slate-700 pt-6">
+                <div className="flex justify-between items-center mb-4">
+                     <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2"><BookOpen className="text-[#002f55] dark:text-[#e4b00f]" /> Pomoč in Navodila</h3>
+                     <button onClick={onEditInstructions} className="text-xs font-bold text-[#002f55] dark:text-[#e4b00f] bg-[#002f55]/5 dark:bg-[#e4b00f]/10 px-3 py-1.5 rounded-lg hover:bg-[#002f55]/10 dark:hover:bg-[#e4b00f]/20 transition-colors">Uredi</button>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+                    <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300 font-mono">
+                        {instructions || "Navodila še niso vpisana."}
+                    </div>
+                </div>
+            </div>
           </div>
         );
 
@@ -1337,7 +1386,7 @@
           const [history, setHistory] = useState([]); 
           const [loading, setLoading] = useState(true); 
 
-          const [globalSettings, setGlobalSettings] = useState({ isBlurred: false, dailyMessage: "" }); 
+          const [globalSettings, setGlobalSettings] = useState({ isBlurred: false, dailyMessage: "", instructions: "" }); 
 
           const [activeTab, setActiveTab] = useState('dashboard'); 
           const [showAddMember, setShowAddMember] = useState(false); 
@@ -1367,6 +1416,9 @@
 
           const [showMessageModal, setShowMessageModal] = useState(false);
           const [messageInput, setMessageInput] = useState("");
+          
+          const [showInstructionsModal, setShowInstructionsModal] = useState(false);
+          const [instructionsInput, setInstructionsInput] = useState("");
 
           // --- DARK MODE STATE ---
           const [darkMode, setDarkMode] = useState(() => {
@@ -1436,7 +1488,7 @@
               if (docSnap.exists()) {
                 setGlobalSettings(docSnap.data());
               } else {
-                setDoc(settingsRef, { isBlurred: false, dailyMessage: "" });
+                setDoc(settingsRef, { isBlurred: false, dailyMessage: "", instructions: "" });
               }
             });
 
@@ -1569,6 +1621,13 @@
             setAdminAuthError(false);
             setShowAdminAuth(true);
           };
+          
+          const handleEditInstructions = () => {
+             setPendingAction({ type: 'EDIT_INSTRUCTIONS' });
+             setAdminPinInput('');
+             setAdminAuthError(false);
+             setShowAdminAuth(true);
+          };
 
           // --- NEW INSTANT TOGGLE BLUR FOR SNAKE GAME ---
           const instantToggleBlur = async () => {
@@ -1589,6 +1648,12 @@
           const setDailyMessageAction = async (msg) => {
               if (!user) return;
               await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), { dailyMessage: msg }, { merge: true });
+          };
+          
+          const saveInstructions = async () => {
+              if (!user) return;
+              await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), { instructions: instructionsInput }, { merge: true });
+              setShowInstructionsModal(false);
           };
 
           // --- MODAL HANDLERS ---
@@ -1656,6 +1721,11 @@
             await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'history', entryToDelete));
             setEntryToDelete(null);
           };
+          
+          const performEditInstructions = () => {
+              setInstructionsInput(globalSettings.instructions || "");
+              setShowInstructionsModal(true);
+          };
 
           const startResetProcess = () => {
             setPendingAction({ type: 'RESET' });
@@ -1688,7 +1758,7 @@
             if (!user) return;
             const isHungry = !!memberHunger[name];
             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', name), { 
-                 isHungry: !isHungry 
+                  isHungry: !isHungry 
              }, { merge: true });
           };
 
@@ -1697,7 +1767,7 @@
             const action = pendingAction?.type;
             let valid = false;
 
-            if ((action === 'DELETE' || action === 'RESET' || action === 'TOGGLE_BLUR' || action === 'TOGGLE_DARK_MODE') && pin === ADMIN_PIN) valid = true;
+            if ((action === 'DELETE' || action === 'RESET' || action === 'TOGGLE_BLUR' || action === 'TOGGLE_DARK_MODE' || action === 'EDIT_INSTRUCTIONS') && pin === ADMIN_PIN) valid = true;
             else if ((action === 'ADD' || action === 'ADD_MEMBER') && (pin === EDIT_CODE || pin === ADMIN_PIN)) valid = true;
 
             if (valid) {
@@ -1715,9 +1785,11 @@
                 performAddMember();
               } else if (action === 'TOGGLE_BLUR') {
                 const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
-                await setDoc(settingsRef, { isBlurred: !globalSettings.isBlurred });
+                await setDoc(settingsRef, { isBlurred: !globalSettings.isBlurred }, { merge: true });
               } else if (action === 'TOGGLE_DARK_MODE') {
                 toggleDarkMode();
+              } else if (action === 'EDIT_INSTRUCTIONS') {
+                  performEditInstructions();
               }
               setPendingAction(null);
             } else {
@@ -1832,6 +1904,7 @@
               <DeleteConfirmModal entry={entryToDelete} onConfirm={performDeleteEntry} onCancel={() => setEntryToDelete(null)} />
               <RouletteModal members={members} balances={balances} show={showRoulette} onClose={() => setShowRoulette(false)} />
               <MessageModal show={showMessageModal} message={messageInput} setMessage={setMessageInput} onConfirm={saveMessageFromModal} onCancel={() => setShowMessageModal(false)} />
+              <InstructionsEditModal show={showInstructionsModal} instructions={instructionsInput} setInstructions={setInstructionsInput} onConfirm={saveInstructions} onCancel={() => setShowInstructionsModal(false)} />
               
               {/* EASTER EGG GAME */}
               {snakeMode && <SnakeGame onClose={() => setSnakeMode(false)} instantToggleBlur={instantToggleBlur} isBlurred={globalSettings.isBlurred} />}
@@ -1900,6 +1973,8 @@
                     showAddMember={showAddMember} setShowAddMember={setShowAddMember} 
                     newMemberName={newMemberName} setNewMemberName={setNewMemberName} addMember={addMemberAction} 
                     darkMode={darkMode} toggleDarkMode={handleToggleDarkMode}
+                    instructions={globalSettings.instructions}
+                    onEditInstructions={handleEditInstructions}
                   />
                 )}
               </main>

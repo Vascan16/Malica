@@ -25,6 +25,21 @@
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+          darkMode: 'class',
+          theme: {
+            extend: {
+              colors: {
+                slate: {
+                  850: '#151e2e',
+                  950: '#020617',
+                }
+              }
+            }
+          }
+        }
+    </script>
     
     <!-- Confetti Library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -52,7 +67,7 @@
     }
     </script>
 </head>
-<body class="bg-slate-50 select-none">
+<body class="bg-slate-50 dark:bg-slate-950 select-none transition-colors duration-300">
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
@@ -65,7 +80,7 @@
           AlertTriangle, FileText, CheckSquare, Square, Lock, Info, Scale, 
           ListOrdered, RefreshCcw, Save, Table, Grid, Printer, Bell, X, 
           Crown, PiggyBank, Ghost, Medal, Dices, Eye, EyeOff, BarChart3, Pizza, Settings, Utensils, StickyNote, PenLine,
-          PieChart as IconPieChart, Activity, Database, ArrowRight, Play, Pause, RotateCcw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Gamepad2
+          PieChart as IconPieChart, Activity, Database, ArrowRight, Play, Pause, RotateCcw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Gamepad2, Moon, Sun
         } from 'lucide-react';
         
         // --- RECHARTS IMPORTS ---
@@ -103,16 +118,16 @@
             render() {
                 if (this.state.hasError) {
                     return (
-                        <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-slate-50 text-slate-800 font-sans">
-                            <div className="bg-white p-8 rounded-3xl shadow-xl border-2 border-rose-100 max-w-sm">
-                                <div className="bg-rose-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-500">
-                                    <alertTriangle size={32} />
+                        <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans">
+                            <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl border-2 border-rose-100 dark:border-rose-900/30 max-w-sm">
+                                <div className="bg-rose-100 dark:bg-rose-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-500">
+                                    <AlertTriangle size={32} />
                                 </div>
-                                <h1 className="text-xl font-black mb-2">Ups, nekaj se je zalomilo!</h1>
-                                <p className="text-xs text-slate-500 mb-6 font-mono bg-slate-100 p-2 rounded">
+                                <h1 className="text-xl font-black mb-2 text-slate-900 dark:text-white">Ups, nekaj se je zalomilo!</h1>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 font-mono bg-slate-100 dark:bg-slate-900 p-2 rounded">
                                     {this.state.error?.message || "Neznana napaka"}
                                 </p>
-                                <button onClick={() => window.location.reload()} className="w-full bg-[#002f55] text-white py-3 rounded-xl font-bold shadow-lg">
+                                <button onClick={() => window.location.reload()} className="w-full bg-[#002f55] dark:bg-[#e4b00f] text-white dark:text-[#002f55] py-3 rounded-xl font-bold shadow-lg">
                                     Osveži Aplikacijo
                                 </button>
                             </div>
@@ -328,8 +343,8 @@
 
           return (
             <div className="fixed inset-0 bg-slate-900/90 z-[80] flex items-center justify-center p-4 backdrop-blur-md animate-fade-in no-print">
-              <div className="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-                <div className="p-6 bg-[#002f55] text-white flex justify-between items-center shrink-0">
+              <div className="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+                <div className="p-6 bg-[#002f55] dark:bg-slate-950 text-white flex justify-between items-center shrink-0">
                   <h2 className="text-xl font-black flex items-center gap-2"><BarChart3 /> Statistika</h2>
                   <div className="flex items-center gap-1">
                       <button onClick={() => { onClose(); onOpenGame(); }} className="p-2 hover:bg-white/10 rounded-full transition-colors text-[#e4b00f]" title="Čakaš na malico? 🐍">
@@ -344,17 +359,17 @@
                     <div className="text-center py-10 text-slate-400 italic">Ni dovolj podatkov za analizo.</div>
                   ) : (
                     <>
-                      <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 text-center">
+                      <div className="bg-slate-50 dark:bg-slate-700/50 p-5 rounded-3xl border border-slate-100 dark:border-slate-700 text-center">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Skupna poraba ekipe</p>
-                        <h3 className="text-3xl font-black text-[#002f55]">{stats.totalSpend.toFixed(2)} €</h3>
+                        <h3 className="text-3xl font-black text-[#002f55] dark:text-[#e4b00f]">{stats.totalSpend.toFixed(2)} €</h3>
                       </div>
 
                       <div className="space-y-3">
                         <div className="flex justify-between items-end">
-                          <span className="text-xs font-bold text-slate-700">Skupaj smo pojedli za...</span>
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Skupaj smo pojedli za...</span>
                           <span className="text-[10px] font-black text-[#002f55] bg-[#e4b00f] px-2 py-0.5 rounded uppercase">{stats.progressMilestone.label}</span>
                         </div>
-                        <div className="h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                        <div className="h-4 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden border border-slate-200 dark:border-slate-600">
                           <div className="h-full bg-gradient-to-r from-[#002f55] to-[#e4b00f] transition-all duration-1000" style={{ width: `${stats.progressPercent}%` }}></div>
                         </div>
                         <div className="flex justify-between text-[8px] font-bold text-slate-400 uppercase">
@@ -364,39 +379,39 @@
                         </div>
                       </div>
 
-                      <div className="bg-emerald-50 p-4 rounded-3xl border border-emerald-100">
+                      <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-3xl border border-emerald-100 dark:border-emerald-900/50">
                         <div className="flex items-center gap-3">
                           <div className="bg-emerald-500 text-white p-2 rounded-2xl"><Calendar size={20} /></div>
                           <div>
-                            <h4 className="text-xs font-black text-emerald-900 uppercase">Najdražji dan</h4>
-                            <p className="text-sm font-bold text-emerald-700">{stats.bestDay} ({stats.bestDayVal.toFixed(0)} €)</p>
+                            <h4 className="text-xs font-black text-emerald-900 dark:text-emerald-400 uppercase">Najdražji dan</h4>
+                            <p className="text-sm font-bold text-emerald-700 dark:text-emerald-500">{stats.bestDay} ({stats.bestDayVal.toFixed(0)} €)</p>
                           </div>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3 text-center">
-                        <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                        <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-3xl border border-slate-100 dark:border-slate-700">
                           <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Povprečna malica</p>
-                          <p className="text-lg font-black text-[#002f55]">{stats.avgLunch.toFixed(2)} €</p>
+                          <p className="text-lg font-black text-[#002f55] dark:text-white">{stats.avgLunch.toFixed(2)} €</p>
                         </div>
-                        <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                        <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-3xl border border-slate-100 dark:border-slate-700">
                           <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Število obrokov</p>
-                          <p className="text-lg font-black text-[#002f55]">{stats.mealCount}</p>
+                          <p className="text-lg font-black text-[#002f55] dark:text-white">{stats.mealCount}</p>
                         </div>
                       </div>
 
-                      <div className="p-4 bg-rose-50 rounded-3xl border border-rose-100 flex items-center gap-3">
+                      <div className="p-4 bg-rose-50 dark:bg-rose-900/20 rounded-3xl border border-rose-100 dark:border-rose-900/50 flex items-center gap-3">
                         <div className="bg-rose-500 text-white p-2 rounded-2xl"><TrendingDown size={20} /></div>
                         <div>
-                          <h4 className="text-xs font-black text-rose-900 uppercase">Največji račun</h4>
-                          <p className="text-sm font-bold text-rose-700">{stats.maxReceipt.toFixed(2)} € ({stats.bigSpender})</p>
+                          <h4 className="text-xs font-black text-rose-900 dark:text-rose-400 uppercase">Največji račun</h4>
+                          <p className="text-sm font-bold text-rose-700 dark:text-rose-500">{stats.maxReceipt.toFixed(2)} € ({stats.bigSpender})</p>
                         </div>
                       </div>
                     </>
                   )}
                 </div>
-                <div className="p-6 bg-slate-50 shrink-0">
-                  <button onClick={onClose} className="w-full py-4 bg-[#002f55] text-white rounded-2xl font-black text-sm shadow-xl">ZAPRI PREGLED</button>
+                <div className="p-6 bg-slate-50 dark:bg-slate-900 shrink-0">
+                  <button onClick={onClose} className="w-full py-4 bg-[#002f55] dark:bg-[#e4b00f] text-white dark:text-[#002f55] rounded-2xl font-black text-sm shadow-xl">ZAPRI PREGLED</button>
                 </div>
               </div>
             </div>
@@ -407,16 +422,16 @@
           if (!show) return null;
           return (
             <div className="fixed inset-0 bg-slate-900/80 z-[90] flex items-center justify-center p-6 backdrop-blur-sm animate-fade-in no-print">
-              <div className="bg-white p-6 rounded-3xl w-full max-w-xs shadow-2xl border-2 border-yellow-100 text-center relative overflow-hidden">
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl w-full max-w-xs shadow-2xl border-2 border-yellow-100 dark:border-yellow-600/30 text-center relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-yellow-400"></div>
                 
                 <div className="flex justify-center mb-4 mt-2">
-                    <div className="bg-yellow-100 p-4 rounded-full text-yellow-600 shadow-sm">
+                    <div className="bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-full text-yellow-600 dark:text-yellow-400 shadow-sm">
                         <StickyNote size={32} />
                     </div>
                 </div>
                 
-                <h3 className="text-xl font-black text-slate-800 mb-2">Sporočilo dneva</h3>
+                <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2">Sporočilo dneva</h3>
                 <p className="text-xs text-slate-400 mb-4">Sporočilo bo vidno vsem, dokler se ne vnese nov račun.</p>
                 
                 <textarea 
@@ -424,7 +439,7 @@
                       value={message}
                       onChange={e => setMessage(e.target.value)}
                       placeholder="Npr. Danes gremo na burgerje..."
-                      className="w-full bg-yellow-50/50 border-2 border-yellow-200 rounded-xl py-3 px-4 text-center font-bold text-slate-700 outline-none focus:border-yellow-400 focus:bg-white transition-all min-h-[80px] resize-none mb-4"
+                      className="w-full bg-yellow-50/50 dark:bg-slate-700 border-2 border-yellow-200 dark:border-yellow-600/30 rounded-xl py-3 px-4 text-center font-bold text-slate-700 dark:text-white outline-none focus:border-yellow-400 focus:bg-white dark:focus:bg-slate-600 transition-all min-h-[80px] resize-none mb-4 placeholder:text-slate-400"
                       onKeyDown={e => {
                         if(e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault();
@@ -434,7 +449,7 @@
                 />
                 
                 <div className="flex gap-2">
-                    <button onClick={onCancel} className="flex-1 py-3 text-slate-400 font-bold bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">Prekliči</button>
+                    <button onClick={onCancel} className="flex-1 py-3 text-slate-400 font-bold bg-slate-50 dark:bg-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors">Prekliči</button>
                     <button onClick={onConfirm} className="flex-1 py-3 bg-yellow-400 text-yellow-900 font-bold rounded-xl shadow-lg hover:bg-yellow-500 transition-colors">Objavi</button>
                 </div>
               </div>
@@ -448,7 +463,7 @@
               <div className="inline-flex p-4 bg-[#002f55] rounded-3xl shadow-2xl border-2 border-[#e4b00f]"><Lock size={48} className="text-white" /></div>
               <h1 className="text-3xl font-black">Malica Manager</h1>
               <div className="space-y-4">
-                <input type="password" value={inputCode} onChange={e => setInputCode(e.target.value)} onKeyDown={e => e.key === 'Enter' && checkAccess()} placeholder="••••" className="w-full bg-slate-800 border-2 border-slate-700 rounded-2xl py-4 text-center text-3xl font-bold tracking-[1em] outline-none focus:border-[#e4b00f] transition-all" autoFocus />
+                <input type="password" inputMode="numeric" value={inputCode} onChange={e => setInputCode(e.target.value)} onKeyDown={e => e.key === 'Enter' && checkAccess()} placeholder="••••" className="w-full bg-slate-800 border-2 border-slate-700 rounded-2xl py-4 text-center text-3xl font-bold tracking-[1em] outline-none focus:border-[#e4b00f] transition-all" autoFocus />
                 {authError && <p className="text-rose-500 text-xs font-bold animate-bounce">Napačna koda!</p>}
                 <button onClick={checkAccess} className="w-full bg-[#002f55] hover:bg-[#001f3f] py-4 rounded-2xl font-black text-lg shadow-xl shadow-[#002f55]/20 text-[#e4b00f]">ODKLENI</button>
               </div>
@@ -457,10 +472,10 @@
         );
 
         const LoadingScreen = () => (
-          <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans text-slate-400">
+          <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center font-sans text-slate-400">
             <div className="text-center">
-              <RefreshCcw className="animate-spin mx-auto mb-2 text-[#002f55]" />
-              <p className="font-bold text-[#002f55]">Nalaganje...</p>
+              <RefreshCcw className="animate-spin mx-auto mb-2 text-[#002f55] dark:text-[#e4b00f]" />
+              <p className="font-bold text-[#002f55] dark:text-[#e4b00f]">Nalaganje...</p>
             </div>
           </div>
         );
@@ -526,16 +541,16 @@
                   <h2 className="text-2xl font-black text-white mt-4 uppercase tracking-widest">Kdo Plača?</h2>
                   <p className="text-white/50 text-xs">Utežen žreb: Večji dolg = Večja smola</p>
                 </div>
-                <div className="bg-white rounded-3xl p-8 shadow-[0_0_50px_rgba(228,176,15,0.3)] border-4 border-[#e4b00f] relative overflow-hidden">
+                <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-[0_0_50px_rgba(228,176,15,0.3)] border-4 border-[#e4b00f] relative overflow-hidden">
                   <div className="h-24 flex items-center justify-center overflow-hidden">
-                      <div className={`text-4xl font-black text-[#002f55] transition-all ${winner ? 'scale-125' : ''}`}>
+                      <div className={`text-4xl font-black text-[#002f55] dark:text-white transition-all ${winner ? 'scale-125' : ''}`}>
                         {currentName}
                       </div>
                   </div>
                   {winner && <div className="absolute inset-0 pointer-events-none flex items-center justify-center"><div className="w-full h-full bg-[#e4b00f]/10 animate-pulse"></div></div>}
                 </div>
                 {!isSpinning && !winner && <button onClick={startSpin} className="mt-8 w-full bg-[#e4b00f] text-[#002f55] py-4 rounded-2xl font-black text-xl shadow-xl hover:scale-105 transition-transform active:scale-95">ZAVRTI 🎲</button>}
-                {winner && <div className="mt-8 space-y-3"><div className="text-white text-lg font-bold animate-bounce">🎊 {winner} častí! 🎊</div><button onClick={startSpin} className="w-full bg-[#002f55] border-2 border-[#e4b00f] text-[#e4b00f] py-3 rounded-xl font-bold">Ponovi vajo</button></div>}
+                {winner && <div className="mt-8 space-y-3"><div className="text-white text-lg font-bold animate-bounce">🎊 {winner} častí! 🎊</div><button onClick={startSpin} className="w-full bg-[#002f55] dark:bg-white border-2 border-[#e4b00f] text-[#e4b00f] dark:text-[#002f55] py-3 rounded-xl font-bold">Ponovi vajo</button></div>}
               </div>
             </div>
           );
@@ -789,18 +804,18 @@
           if (!show) return null;
           const isEditingAction = pendingAction?.type === 'ADD' || pendingAction?.type === 'ADD_MEMBER';
           const isBlurToggle = pendingAction?.type === 'TOGGLE_BLUR';
-          const isDemoData = pendingAction?.type === 'DEMO_DATA';
+          const isDarkModeToggle = pendingAction?.type === 'TOGGLE_DARK_MODE';
           return (
             <div className="fixed inset-0 bg-slate-900/80 z-[60] flex items-center justify-center p-6 backdrop-blur-sm animate-fade-in no-print">
-              <div className="bg-white p-6 rounded-3xl w-full max-w-xs shadow-2xl border-2 border-slate-100 text-center">
-                <div className="flex justify-center mb-4"><div className="bg-[#002f55]/10 p-3 rounded-full text-[#002f55]"><Lock size={32} /></div></div>
-                <h3 className="text-xl font-black text-slate-800 mb-2">Varnostna koda</h3>
-                <p className="text-slate-500 text-xs mb-4">
-                  {isBlurToggle ? 'Za vklop/izklop zasebnosti potrebuješ ADMIN PIN.' : (isEditingAction || isDemoData ? 'Za to akcijo je potrebna koda za urejanje.' : 'Za to akcijo je potreben administratorski PIN.')}
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl w-full max-w-xs shadow-2xl border-2 border-slate-100 dark:border-slate-700 text-center">
+                <div className="flex justify-center mb-4"><div className="bg-[#002f55]/10 dark:bg-slate-700 p-3 rounded-full text-[#002f55] dark:text-white"><Lock size={32} /></div></div>
+                <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2">Varnostna koda</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-xs mb-4">
+                  {isBlurToggle || isDarkModeToggle ? 'Za to akcijo potrebuješ ADMIN PIN.' : (isEditingAction ? 'Za to akcijo je potrebna koda za urejanje.' : 'Za to akcijo je potreben administratorski PIN.')}
                 </p>
-                <input type="password" autoFocus value={pin} onChange={e => setPin(e.target.value)} onKeyDown={e => e.key === 'Enter' && onConfirm()} placeholder="••••" className="w-full bg-slate-100 border-2 border-slate-200 rounded-xl py-3 text-center text-2xl font-bold tracking-widest outline-none focus:border-[#e4b00f] mb-2" />
+                <input type="password" inputMode="numeric" autoFocus value={pin} onChange={e => setPin(e.target.value)} onKeyDown={e => e.key === 'Enter' && onConfirm()} placeholder="••••" className="w-full bg-slate-100 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 rounded-xl py-3 text-center text-2xl font-bold tracking-widest outline-none focus:border-[#e4b00f] dark:text-white mb-2" />
                 {error && <p className="text-rose-500 text-xs font-bold mb-4 animate-bounce">Napačna koda!</p>}
-                <div className="flex gap-2 mt-4"><button onClick={onCancel} className="flex-1 py-3 text-slate-400 font-bold bg-slate-50 rounded-xl">Prekliči</button><button onClick={onConfirm} className="flex-1 py-3 bg-[#002f55] text-white font-bold rounded-xl shadow-lg">Potrdi</button></div>
+                <div className="flex gap-2 mt-4"><button onClick={onCancel} className="flex-1 py-3 text-slate-400 dark:text-slate-300 font-bold bg-slate-50 dark:bg-slate-700 rounded-xl">Prekliči</button><button onClick={onConfirm} className="flex-1 py-3 bg-[#002f55] dark:bg-[#e4b00f] text-white dark:text-[#002f55] font-bold rounded-xl shadow-lg">Potrdi</button></div>
               </div>
             </div>
           );
@@ -810,11 +825,11 @@
           if (!entry) return null;
           return (
             <div className="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-6 backdrop-blur-sm animate-fade-in no-print">
-              <div className="bg-white p-6 rounded-3xl w-full max-w-sm shadow-2xl border-2 border-slate-100">
-                <div className="flex justify-center mb-4"><div className="bg-rose-100 p-3 rounded-full text-rose-500"><Trash2 size={32} /></div></div>
-                <h3 className="text-xl font-black text-center text-slate-800 mb-2">Izbrišem vnos?</h3>
-                <p className="text-center text-slate-500 mb-6 text-sm">Tega dejanja ni mogoče razveljaviti.</p>
-                <div className="flex gap-3"><button onClick={onCancel} className="flex-1 py-3 font-bold text-slate-500 bg-slate-100 rounded-xl hover:bg-slate-200">Prekliči</button><button onClick={onConfirm} className="flex-1 py-3 font-bold text-white bg-rose-500 rounded-xl hover:bg-rose-600 shadow-lg shadow-rose-200">Izbriši</button></div>
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl w-full max-w-sm shadow-2xl border-2 border-slate-100 dark:border-slate-700">
+                <div className="flex justify-center mb-4"><div className="bg-rose-100 dark:bg-rose-900/30 p-3 rounded-full text-rose-500"><Trash2 size={32} /></div></div>
+                <h3 className="text-xl font-black text-center text-slate-800 dark:text-white mb-2">Izbrišem vnos?</h3>
+                <p className="text-center text-slate-500 dark:text-slate-400 mb-6 text-sm">Tega dejanja ni mogoče razveljaviti.</p>
+                <div className="flex gap-3"><button onClick={onCancel} className="flex-1 py-3 font-bold text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600">Prekliči</button><button onClick={onConfirm} className="flex-1 py-3 font-bold text-white bg-rose-500 rounded-xl hover:bg-rose-600 shadow-lg shadow-rose-200">Izbriši</button></div>
               </div>
             </div>
           );
@@ -867,19 +882,19 @@
         );
 
         const Navigation = ({ activeTab, setActiveTab, isBlurred }) => (
-          <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-2 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)] print:hidden z-50">
+          <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-6 py-2 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)] print:hidden z-50 transition-colors">
             <div className="max-w-md mx-auto flex justify-between items-center">
-              <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === 'dashboard' ? 'text-[#002f55] bg-slate-100 scale-105' : 'text-slate-400'}`}><TrendingDown size={22} /><span className="text-[10px] mt-1 font-bold">Stanje</span></button>
+              <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === 'dashboard' ? 'text-[#002f55] dark:text-white bg-slate-100 dark:bg-slate-800 scale-105' : 'text-slate-400'}`}><TrendingDown size={22} /><span className="text-[10px] mt-1 font-bold">Stanje</span></button>
               
-              <button onClick={() => setActiveTab('analytics')} className={`flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === 'analytics' ? 'text-[#002f55] bg-slate-100 scale-105' : 'text-slate-400'}`}><Activity size={22} /><span className="text-[10px] mt-1 font-bold">Analitika</span></button>
+              <button onClick={() => setActiveTab('analytics')} className={`flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === 'analytics' ? 'text-[#002f55] dark:text-white bg-slate-100 dark:bg-slate-800 scale-105' : 'text-slate-400'}`}><Activity size={22} /><span className="text-[10px] mt-1 font-bold">Analitika</span></button>
               
-              <div className="relative -top-8"><button onClick={() => setActiveTab('add')} className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl ${activeTab === 'add' ? 'bg-[#002f55] border-[#e4b00f]' : 'bg-[#002f55] border-white'} border-4 text-[#e4b00f] active:scale-90 transition-all`}><PlusCircle size={32} /></button></div>
+              <div className="relative -top-8"><button onClick={() => setActiveTab('add')} className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl ${activeTab === 'add' ? 'bg-[#002f55] dark:bg-[#e4b00f] border-[#e4b00f] dark:border-[#002f55] text-[#e4b00f] dark:text-[#002f55]' : 'bg-[#002f55] dark:bg-[#002f55] border-white dark:border-slate-800 text-[#e4b00f]'} border-4 active:scale-90 transition-all`}><PlusCircle size={32} /></button></div>
               
-              <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === 'history' ? 'text-[#002f55] bg-slate-100 scale-105' : 'text-slate-400'}`}><History size={22} /><span className="text-[10px] mt-1 font-bold">Zgodovina</span></button>
+              <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === 'history' ? 'text-[#002f55] dark:text-white bg-slate-100 dark:bg-slate-800 scale-105' : 'text-slate-400'}`}><History size={22} /><span className="text-[10px] mt-1 font-bold">Zgodovina</span></button>
               
               <button 
                 onClick={() => !isBlurred && setActiveTab('settle')} 
-                className={`flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === 'settle' ? 'text-[#002f55] bg-slate-100 scale-105' : 'text-slate-400'} ${isBlurred ? 'opacity-30 cursor-not-allowed' : ''}`}
+                className={`flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === 'settle' ? 'text-[#002f55] dark:text-white bg-slate-100 dark:bg-slate-800 scale-105' : 'text-slate-400'} ${isBlurred ? 'opacity-30 cursor-not-allowed' : ''}`}
                 disabled={isBlurred}
               >
                 <Calculator size={22} />
@@ -893,7 +908,7 @@
         // 4. ZAVIHKI
         // ==========================================
 
-        const TabAnalytics = ({ history, members, setActiveTab, isBlurred }) => {
+        const TabAnalytics = ({ history, members, setActiveTab, isBlurred, darkMode }) => {
             // 1. MAPPING BARV (Barva je vezana na ime člana)
             const memberColorMap = useMemo(() => {
                 const map = {};
@@ -996,21 +1011,20 @@
             if (history.length === 0) {
                  return (
                     <div className="flex flex-col items-center justify-center h-[50vh] text-slate-400 animate-fade-in">
-                        <BarChart3 size={64} className="mb-4 text-slate-200" />
+                        <BarChart3 size={64} className="mb-4 text-slate-200 dark:text-slate-700" />
                         <p className="font-bold">Ni podatkov za analizo.</p>
-                        <p className="text-xs text-slate-400 text-center px-8 mt-2">Pojdi v Nastavitve in klikni "Generiraj Demo Podatke" za hiter test.</p>
                     </div>
                 );
             }
 
             return (
                 <div className="space-y-6 pb-20 animate-fade-in">
-                    <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 px-2">
-                        <Activity className="text-[#002f55]" /> Pametna Analitika
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2 px-2">
+                        <Activity className="text-[#002f55] dark:text-[#e4b00f]" /> Pametna Analitika
                     </h3>
 
-                    <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
-                        <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <div className="bg-white dark:bg-slate-800 p-4 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
+                        <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                             <IconPieChart size={16} /> Kdo je največ pojedel?
                         </h4>
                         <div className={`h-64 w-full transition-all duration-500 ${isBlurred ? 'blur-lg select-none pointer-events-none opacity-50' : ''}`}>
@@ -1024,6 +1038,7 @@
                                         outerRadius={80}
                                         paddingAngle={5}
                                         dataKey="value"
+                                        stroke={darkMode ? "#1e293b" : "#fff"}
                                     >
                                         {pieData.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={entry.color} />
@@ -1031,7 +1046,7 @@
                                     </Pie>
                                     <RechartsTooltip 
                                         formatter={(value) => `${value.toFixed(2)} €`}
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', backgroundColor: darkMode ? '#1e293b' : '#fff', color: darkMode ? '#fff' : '#000' }}
                                     />
                                     <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }}/>
                                 </PieChart>
@@ -1039,14 +1054,14 @@
                         </div>
                     </div>
 
-                    <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                        <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <div className="bg-white dark:bg-slate-800 p-4 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+                        <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                             <TrendingDown size={16} /> Gibanje stanja (Trend)
                         </h4>
                         <div className={`h-64 w-full -ml-2 transition-all duration-500 ${isBlurred ? 'blur-lg select-none pointer-events-none opacity-50' : ''}`}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={timeData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={darkMode ? "#334155" : "#f1f5f9"} />
                                     <XAxis 
                                         dataKey="date" 
                                         tick={{fontSize: 9, fill: '#94a3b8'}} 
@@ -1061,9 +1076,9 @@
                                         tickFormatter={(val) => `${val}€`}
                                         width={35}
                                     />
-                                    <ReferenceLine y={0} stroke="#cbd5e1" strokeDasharray="3 3" />
+                                    <ReferenceLine y={0} stroke={darkMode ? "#475569" : "#cbd5e1"} strokeDasharray="3 3" />
                                     <RechartsTooltip 
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px', backgroundColor: darkMode ? '#1e293b' : '#fff', color: darkMode ? '#fff' : '#000' }}
                                     />
                                     {members.map((m) => (
                                         <Line 
@@ -1079,14 +1094,14 @@
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
-                        <p className="text-[10px] text-slate-300 text-center mt-2 italic">Graf prikazuje, kdo pleza v plus in kdo tone v minus skozi čas.</p>
+                        <p className="text-[10px] text-slate-300 dark:text-slate-500 text-center mt-2 italic">Graf prikazuje, kdo pleza v plus in kdo tone v minus skozi čas.</p>
                     </div>
 
                     {/* GUMB DO MATRIK */}
                     <button 
                         onClick={() => setActiveTab('matrix')} 
                         disabled={isBlurred}
-                        className={`w-full py-4 bg-slate-100 text-slate-600 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all border border-slate-200 ${isBlurred ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-200'}`}
+                        className={`w-full py-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all border border-slate-200 dark:border-slate-600 ${isBlurred ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-200 dark:hover:bg-slate-600'}`}
                     >
                         {isBlurred ? <Lock size={16} /> : <Grid size={20} />} 
                         {isBlurred ? 'Podroben pregled skrit' : 'Podroben pregled matrik'} 
@@ -1101,11 +1116,11 @@
           <div className="space-y-6 animate-fade-in">
             {/* SPOROČILO DNEVA - LOGIKA */}
             {dailyMessage && (
-                <div className="bg-yellow-100 border-2 border-yellow-200 p-4 rounded-2xl flex items-start gap-3 shadow-sm relative animate-fade-in">
-                    <StickyNote className="text-yellow-500 shrink-0" size={24} />
+                <div className="bg-yellow-100 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-700/50 p-4 rounded-2xl flex items-start gap-3 shadow-sm relative animate-fade-in">
+                    <StickyNote className="text-yellow-500 dark:text-yellow-400 shrink-0" size={24} />
                     <div className="flex-1">
-                        <p className="text-[10px] font-bold text-yellow-600 uppercase tracking-widest mb-1">Sporočilo dneva</p>
-                        <p className="font-bold text-yellow-900 text-sm leading-tight break-words">
+                        <p className="text-[10px] font-bold text-yellow-600 dark:text-yellow-500 uppercase tracking-widest mb-1">Sporočilo dneva</p>
+                        <p className="font-bold text-yellow-900 dark:text-yellow-100 text-sm leading-tight break-words">
                             {dailyMessage}
                         </p>
                     </div>
@@ -1116,38 +1131,38 @@
               <button onClick={onOpenRoulette} className="w-full py-4 bg-[#e4b00f] text-[#002f55] font-black text-lg rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#e4b00f]/20 hover:scale-[1.02] transition-transform active:scale-95"><Dices size={24} /> Kdo Plača? 🎲</button>
             )}
 
-            <div className="bg-white p-6 rounded-3xl shadow-lg border border-white text-center relative">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-lg border border-white dark:border-slate-700 text-center relative transition-colors">
               <button 
                 onClick={onEditMessage}
-                className="absolute top-4 right-4 text-slate-300 hover:text-[#002f55] transition-colors p-2"
+                className="absolute top-4 right-4 text-slate-300 dark:text-slate-500 hover:text-[#002f55] dark:hover:text-white transition-colors p-2"
                 title="Uredi sporočilo"
               >
                 <PenLine size={18} />
               </button>
 
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Naslednji plača</p>
-              <h2 className={`text-4xl font-black text-[#002f55] mb-2 transition-all duration-500 ${isBlurred ? 'blur-lg select-none' : ''}`}>
+              <p className="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-widest mb-2">Naslednji plača</p>
+              <h2 className={`text-4xl font-black text-[#002f55] dark:text-[#e4b00f] mb-2 transition-all duration-500 ${isBlurred ? 'blur-lg select-none' : ''}`}>
                 {payerRanking[0] || "Dodaj člana"}
               </h2>
               {payerRanking[0] && (
-                <div className={`inline-flex items-center gap-2 bg-[#002f55]/5 px-4 py-1.5 rounded-full text-sm font-bold text-slate-600 transition-all duration-500 ${isBlurred ? 'blur-md select-none' : ''}`}>
+                <div className={`inline-flex items-center gap-2 bg-[#002f55]/5 dark:bg-slate-700/50 px-4 py-1.5 rounded-full text-sm font-bold text-slate-600 dark:text-slate-300 transition-all duration-500 ${isBlurred ? 'blur-md select-none' : ''}`}>
                   Bilanca: {balances[payerRanking[0]]?.toFixed(2)} €
                 </div>
               )}
             </div>
             
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-              <div className="p-5 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
-                <h3 className="font-bold text-slate-700 flex items-center gap-2"><ListOrdered size={18} className="text-[#002f55]" /> Vrstni red</h3>
+            <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden transition-colors">
+              <div className="p-5 border-b border-slate-50 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-700/30 flex justify-between items-center">
+                <h3 className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2"><ListOrdered size={18} className="text-[#002f55] dark:text-[#e4b00f]" /> Vrstni red</h3>
               </div>
-              <div className={`divide-y divide-slate-50 transition-all duration-500 ${isBlurred ? 'blur-lg select-none' : ''}`}>
+              <div className={`divide-y divide-slate-50 dark:divide-slate-700 transition-all duration-500 ${isBlurred ? 'blur-lg select-none' : ''}`}>
                 {payerRanking.map((m, idx) => {
                   const memberTitles = titles[m] || []; 
                   return (
-                    <div key={m} className={`p-4 flex justify-between items-center ${idx === 0 ? 'bg-[#002f55]/10' : ''}`}>
+                    <div key={m} className={`p-4 flex justify-between items-center ${idx === 0 ? 'bg-[#002f55]/10 dark:bg-[#002f55]/40' : ''}`}>
                       <div className="flex items-center gap-3">
-                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black ${idx === 0 ? 'bg-[#002f55] text-[#e4b00f]' : 'bg-slate-100 text-slate-400'}`}>{idx + 1}</span>
-                        <div className="flex flex-col"><span className="font-bold text-slate-700">{m}</span>
+                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black ${idx === 0 ? 'bg-[#002f55] dark:bg-[#e4b00f] text-[#e4b00f] dark:text-[#002f55]' : 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500'}`}>{idx + 1}</span>
+                        <div className="flex flex-col"><span className="font-bold text-slate-700 dark:text-slate-200">{m}</span>
                         {memberTitles.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
                             {memberTitles.map((t, i) => (
@@ -1164,48 +1179,48 @@
                         </div>
                         <button 
                             onClick={(e) => { e.stopPropagation(); onToggleHunger(m); }}
-                            className={`ml-2 p-2 rounded-full transition-all ${memberHunger[m] ? 'bg-orange-100 text-orange-500 shadow-sm' : 'text-slate-300 hover:bg-slate-50'}`}
+                            className={`ml-2 p-2 rounded-full transition-all ${memberHunger[m] ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-500 shadow-sm' : 'text-slate-300 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
                         >
                             {memberHunger[m] ? <Pizza size={16} className="animate-bounce" /> : <Utensils size={16} />}
                         </button>
                       </div>
-                      <span className={`font-bold tabular-nums ${balances[m] >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>{balances[m] >= 0 ? '+' : ''}{balances[m].toFixed(2)} €</span>
+                      <span className={`font-bold tabular-nums ${balances[m] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>{balances[m] >= 0 ? '+' : ''}{balances[m].toFixed(2)} €</span>
                     </div>
                   );
                 })}
               </div>
             </div>
-             
-            <button onClick={onOpenStats} className="w-full py-3 bg-[#002f55]/5 text-[#002f55] font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-[#002f55]/10 transition-all border border-[#002f55]/10"><BarChart3 size={18} /> Statistika</button>
+              
+            <button onClick={onOpenStats} className="w-full py-3 bg-[#002f55]/5 dark:bg-slate-800 text-[#002f55] dark:text-slate-300 font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-[#002f55]/10 dark:hover:bg-slate-700 transition-all border border-[#002f55]/10 dark:border-slate-700"><BarChart3 size={18} /> Statistika</button>
           </div>
         );
 
         const TabMatrix = ({ members, history, matrixType, setMatrixType, onPrint }) => (
           <div className="space-y-4 animate-fade-in">
-            <div className="flex justify-between items-center px-1"><h3 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Grid className="text-[#002f55]" /> Matrike</h3><div className="flex bg-slate-200 p-1 rounded-lg"><button onClick={() => setMatrixType('P')} className={`px-4 py-1 rounded-md text-xs font-bold transition-all ${matrixType === 'P' ? 'bg-[#002f55] shadow text-white' : 'text-slate-500'}`}>Plačila</button><button onClick={() => setMatrixType('S')} className={`px-4 py-1 rounded-md text-xs font-bold transition-all ${matrixType === 'S' ? 'bg-[#002f55] shadow text-white' : 'text-slate-500'}`}>Poraba</button><button onClick={() => setMatrixType('Z')} className={`px-4 py-1 rounded-md text-xs font-bold transition-all ${matrixType === 'Z' ? 'bg-[#002f55] shadow text-white' : 'text-slate-500'}`}>Začetno</button></div></div>
-            <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-100 overflow-hidden"><div className="overflow-x-auto custom-scrollbar pb-2"><table className="w-full text-xs whitespace-nowrap"><thead><tr className="border-b border-slate-100 bg-slate-50/50"><th className="p-3 text-left font-bold text-slate-400">Datum</th>{members.map(m => (<th key={m} className="p-3 text-right font-bold text-slate-600">{m.substring(0, 3)}</th>))}<th className="p-3 text-right font-black text-slate-800">Σ</th></tr></thead><tbody>{matrixType === 'Z' && (() => { const adjustments = history.filter(e => e.type === 'adjustment'); const rowSum = members.reduce((sum, m) => sum + adjustments.reduce((s, e) => s + (e.user === m ? e.amount : 0), 0), 0); return (<tr className="border-b-2 border-[#002f55]/20 bg-[#002f55]/5 text-xs"><td className="p-3 font-bold text-[#002f55] border-r border-[#002f55]/20">Začetno stanje <span className="block text-[9px] font-normal text-[#002f55]/60">Prenos</span></td>{members.map(m => { const val = adjustments.reduce((s, e) => s + (e.user === m ? e.amount : 0), 0); return (<td key={m} className={`p-3 text-right tabular-nums ${val !== 0 ? (val >= 0 ? 'text-emerald-600' : 'text-rose-500') : 'text-slate-400'}`}>{val !== 0 ? (val > 0 ? '+' : '') + val.toFixed(1) : '0.0'}</td>); })}<td className="p-3 text-right font-black text-[#002f55] bg-[#002f55]/10">{rowSum !== 0 ? (rowSum > 0 ? '+' : '') + rowSum.toFixed(1) : '0.0'}</td></tr>); })()}{history.map(entry => { if (matrixType === 'Z' || (matrixType !== 'Z' && entry.type === 'adjustment')) return null; const rowSum = members.reduce((sum, m) => sum + getMatrixValue(entry, m, matrixType), 0); return (<tr key={entry.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors"><td className="p-3 text-slate-500 font-medium border-r border-slate-50">{new Date(entry.date).toLocaleDateString('sl-SI', { day: 'numeric', month: 'numeric' })} <span className="text-[9px] text-slate-300 ml-1">{entry.opis.substring(0, 8)}</span></td>{members.map(m => { const val = getMatrixValue(entry, m, matrixType); return (<td key={m} className={`p-3 text-right tabular-nums ${val !== 0 ? (matrixType === 'S' ? 'text-rose-500' : (matrixType === 'Z' ? (val > 0 ? 'text-emerald-600' : 'text-rose-500') : 'text-[#002f55] font-bold')) : 'text-slate-200'}`}>{val !== 0 ? val.toFixed(1) : '-'}</td>) })}<td className="p-3 text-right font-bold text-slate-800 bg-slate-50/30">{rowSum.toFixed(1)}</td></tr>) })}</tbody><tfoot><tr className="bg-slate-100 font-black text-slate-700"><td className="p-3">SKUPAJ</td>{members.map(m => { const colSum = history.reduce((sum, e) => { if (matrixType === 'Z') return sum + (e.type === 'adjustment' && e.user === m ? (parseFloat(e.amount) || 0) : 0); return e.type === 'adjustment' ? sum : sum + getMatrixValue(e, m, matrixType); }, 0); return <td key={m} className="p-3 text-right">{colSum.toFixed(1)}</td> })}<td className="p-3 text-right">{history.reduce((tot, e) => { if ((matrixType === 'Z' && e.type !== 'adjustment') || (matrixType !== 'Z' && e.type === 'adjustment')) return tot; return tot + parseFloat(e.amount || 0); }, 0).toFixed(1)}</td></tr></tfoot></table></div></div><button onClick={onPrint} className="w-full mt-4 py-3 bg-[#002f55]/5 text-[#002f55] font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-[#002f55]/10 transition-all border border-[#002f55]/10"><Printer size={18} /> Shrani PDF Poročilo</button></div>
+            <div className="flex justify-between items-center px-1"><h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2"><Grid className="text-[#002f55] dark:text-[#e4b00f]" /> Matrike</h3><div className="flex bg-slate-200 dark:bg-slate-800 p-1 rounded-lg"><button onClick={() => setMatrixType('P')} className={`px-4 py-1 rounded-md text-xs font-bold transition-all ${matrixType === 'P' ? 'bg-[#002f55] dark:bg-[#e4b00f] shadow text-white dark:text-[#002f55]' : 'text-slate-500 dark:text-slate-400'}`}>Plačila</button><button onClick={() => setMatrixType('S')} className={`px-4 py-1 rounded-md text-xs font-bold transition-all ${matrixType === 'S' ? 'bg-[#002f55] dark:bg-[#e4b00f] shadow text-white dark:text-[#002f55]' : 'text-slate-500 dark:text-slate-400'}`}>Poraba</button><button onClick={() => setMatrixType('Z')} className={`px-4 py-1 rounded-md text-xs font-bold transition-all ${matrixType === 'Z' ? 'bg-[#002f55] dark:bg-[#e4b00f] shadow text-white dark:text-[#002f55]' : 'text-slate-500 dark:text-slate-400'}`}>Začetno</button></div></div>
+            <div className="bg-white dark:bg-slate-800 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden"><div className="overflow-x-auto custom-scrollbar pb-2"><table className="w-full text-xs whitespace-nowrap"><thead><tr className="border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/50"><th className="p-3 text-left font-bold text-slate-400 dark:text-slate-500">Datum</th>{members.map(m => (<th key={m} className="p-3 text-right font-bold text-slate-600 dark:text-slate-300">{m.substring(0, 3)}</th>))}<th className="p-3 text-right font-black text-slate-800 dark:text-white">Σ</th></tr></thead><tbody>{matrixType === 'Z' && (() => { const adjustments = history.filter(e => e.type === 'adjustment'); const rowSum = members.reduce((sum, m) => sum + adjustments.reduce((s, e) => s + (e.user === m ? e.amount : 0), 0), 0); return (<tr className="border-b-2 border-[#002f55]/20 dark:border-slate-600 bg-[#002f55]/5 dark:bg-slate-700/30 text-xs"><td className="p-3 font-bold text-[#002f55] dark:text-[#e4b00f] border-r border-[#002f55]/20 dark:border-slate-600">Začetno stanje <span className="block text-[9px] font-normal text-[#002f55]/60 dark:text-slate-400">Prenos</span></td>{members.map(m => { const val = adjustments.reduce((s, e) => s + (e.user === m ? e.amount : 0), 0); return (<td key={m} className={`p-3 text-right tabular-nums ${val !== 0 ? (val >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400') : 'text-slate-400 dark:text-slate-600'}`}>{val !== 0 ? (val > 0 ? '+' : '') + val.toFixed(1) : '0.0'}</td>); })}<td className="p-3 text-right font-black text-[#002f55] dark:text-white bg-[#002f55]/10 dark:bg-slate-700">{rowSum !== 0 ? (rowSum > 0 ? '+' : '') + rowSum.toFixed(1) : '0.0'}</td></tr>); })()}{history.map(entry => { if (matrixType === 'Z' || (matrixType !== 'Z' && entry.type === 'adjustment')) return null; const rowSum = members.reduce((sum, m) => sum + getMatrixValue(entry, m, matrixType), 0); return (<tr key={entry.id} className="border-b border-slate-50 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"><td className="p-3 text-slate-500 dark:text-slate-400 font-medium border-r border-slate-50 dark:border-slate-700">{new Date(entry.date).toLocaleDateString('sl-SI', { day: 'numeric', month: 'numeric' })} <span className="text-[9px] text-slate-300 dark:text-slate-600 ml-1">{entry.opis.substring(0, 8)}</span></td>{members.map(m => { const val = getMatrixValue(entry, m, matrixType); return (<td key={m} className={`p-3 text-right tabular-nums ${val !== 0 ? (matrixType === 'S' ? 'text-rose-500 dark:text-rose-400' : (matrixType === 'Z' ? (val > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400') : 'text-[#002f55] dark:text-[#e4b00f] font-bold')) : 'text-slate-200 dark:text-slate-700'}`}>{val !== 0 ? val.toFixed(1) : '-'}</td>) })}<td className="p-3 text-right font-bold text-slate-800 dark:text-slate-200 bg-slate-50/30 dark:bg-slate-700/20">{rowSum.toFixed(1)}</td></tr>) })}</tbody><tfoot><tr className="bg-slate-100 dark:bg-slate-700 font-black text-slate-700 dark:text-slate-200"><td className="p-3">SKUPAJ</td>{members.map(m => { const colSum = history.reduce((sum, e) => { if (matrixType === 'Z') return sum + (e.type === 'adjustment' && e.user === m ? (parseFloat(e.amount) || 0) : 0); return e.type === 'adjustment' ? sum : sum + getMatrixValue(e, m, matrixType); }, 0); return <td key={m} className="p-3 text-right">{colSum.toFixed(1)}</td> })}<td className="p-3 text-right">{history.reduce((tot, e) => { if ((matrixType === 'Z' && e.type !== 'adjustment') || (matrixType !== 'Z' && e.type === 'adjustment')) return tot; return tot + parseFloat(e.amount || 0); }, 0).toFixed(1)}</td></tr></tfoot></table></div></div><button onClick={onPrint} className="w-full mt-4 py-3 bg-[#002f55]/5 dark:bg-slate-800 text-[#002f55] dark:text-slate-300 font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-[#002f55]/10 dark:hover:bg-slate-700 transition-all border border-[#002f55]/10 dark:border-slate-700"><Printer size={18} /> Shrani PDF Poročilo</button></div>
         );
 
         const TabAddEntry = ({ 
           addEntry, amount, setAmount, payer, setPayer, members, selectedParticipants, setSelectedParticipants, 
           date, setDate, splitType, setSplitType, manualAmounts, setManualAmounts, isManualBalanced 
         }) => (
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 animate-fade-in">
-            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2"><PlusCircle className="text-[#002f55]" /> Nov račun</h3>
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 animate-fade-in transition-colors">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2"><PlusCircle className="text-[#002f55] dark:text-[#e4b00f]" /> Nov račun</h3>
             <form onSubmit={addEntry} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Opis</label><input type="text" id="opis-input" placeholder="Spar, Pizza..." className="w-full p-3 bg-slate-50 rounded-xl outline-none" /></div>
-                <div><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Datum</label><input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl outline-none" /></div>
+                <div><label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Opis</label><input type="text" id="opis-input" placeholder="Spar, Pizza..." className="w-full p-3 bg-slate-50 dark:bg-slate-700 dark:text-white rounded-xl outline-none transition-colors" /></div>
+                <div><label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Datum</label><input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full p-3 bg-slate-50 dark:bg-slate-700 dark:text-white rounded-xl outline-none transition-colors" /></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Znesek (€)</label><input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl font-bold text-lg outline-none" placeholder="0.00" /></div>
-                <div><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Plačnik</label><select value={payer} onChange={e => setPayer(e.target.value)} className="w-full p-3 bg-slate-50 rounded-xl font-bold text-[#002f55] outline-none">{members.map(m => <option key={m} value={m}>{m}</option>)}</select></div>
+                <div><label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Znesek (€)</label><input type="number" inputMode="decimal" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className="w-full p-3 bg-slate-50 dark:bg-slate-700 dark:text-white rounded-xl font-bold text-lg outline-none transition-colors" placeholder="0.00" /></div>
+                <div><label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Plačnik</label><select value={payer} onChange={e => setPayer(e.target.value)} className="w-full p-3 bg-slate-50 dark:bg-slate-700 rounded-xl font-bold text-[#002f55] dark:text-white outline-none transition-colors">{members.map(m => <option key={m} value={m}>{m}</option>)}</select></div>
               </div>
-              <div className="flex bg-slate-100 p-1 rounded-2xl gap-1"><button type="button" onClick={() => setSplitType('equal')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${splitType === 'equal' ? 'bg-white shadow-sm text-[#002f55]' : 'text-slate-400'}`}>Enakomerno</button><button type="button" onClick={() => setSplitType('manual')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${splitType === 'manual' ? 'bg-white shadow-sm text-[#002f55]' : 'text-slate-400'}`}>Po porabi</button></div>
-              <div className="flex justify-end px-1 pt-2"><button type="button" onClick={() => setSelectedParticipants(selectedParticipants.length === members.length ? [] : [...members])} className="text-xs font-bold text-[#002f55] hover:text-[#001f3f] transition-colors flex items-center gap-2 py-2">{selectedParticipants.length === members.length ? <CheckSquare size={18} /> : <Square size={18} />} <span className="uppercase tracking-wider">Vsi</span></button></div>
-              <div className="space-y-2">{members.map(m => { const sel = selectedParticipants.includes(m); return (<div key={m} onClick={() => setSelectedParticipants(prev => prev.includes(m) ? prev.filter(p => p !== m) : [...prev, m])} className={`p-3 rounded-xl border transition-all flex items-center gap-3 cursor-pointer select-none ${sel ? 'bg-[#002f55]/5 border-[#002f55]/10 shadow-sm' : 'border-slate-50 hover:bg-slate-50'}`}><span className={`flex-1 text-sm font-bold ${sel ? 'text-slate-800' : 'text-slate-400'}`}>{m}</span>{splitType === 'manual' && sel ? (<div onClick={e => e.stopPropagation()}><input type="number" step="0.01" placeholder="0.00" value={manualAmounts[m] || ''} onChange={e => setManualAmounts({ ...manualAmounts, [m]: e.target.value })} className="w-20 p-1 bg-white border rounded text-right text-xs font-bold" /></div>) : (sel && <CheckCircle2 size={16} className="text-[#002f55]" />)}</div>); })}</div>
-              {splitType === 'manual' && (<div className={`p-3 rounded-xl text-center text-xs font-bold ${isManualBalanced ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>Vsota: {Object.values(manualAmounts).reduce((a, b) => a + (parseFloat(b) || 0), 0).toFixed(2)} € / {parseFloat(amount || 0).toFixed(2)} €</div>)}
-              <button type="submit" disabled={!amount || selectedParticipants.length === 0 || (splitType === 'manual' && !isManualBalanced)} className="w-full bg-[#002f55] text-white py-4 rounded-2xl font-black shadow-xl disabled:opacity-30">SHRANI RAČUN</button>
+              <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-2xl gap-1 transition-colors"><button type="button" onClick={() => setSplitType('equal')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${splitType === 'equal' ? 'bg-white dark:bg-slate-600 shadow-sm text-[#002f55] dark:text-white' : 'text-slate-400 dark:text-slate-400'}`}>Enakomerno</button><button type="button" onClick={() => setSplitType('manual')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${splitType === 'manual' ? 'bg-white dark:bg-slate-600 shadow-sm text-[#002f55] dark:text-white' : 'text-slate-400 dark:text-slate-400'}`}>Po porabi</button></div>
+              <div className="flex justify-end px-1 pt-2"><button type="button" onClick={() => setSelectedParticipants(selectedParticipants.length === members.length ? [] : [...members])} className="text-xs font-bold text-[#002f55] dark:text-[#e4b00f] hover:text-[#001f3f] dark:hover:text-[#c49b0d] transition-colors flex items-center gap-2 py-2">{selectedParticipants.length === members.length ? <CheckSquare size={18} /> : <Square size={18} />} <span className="uppercase tracking-wider">Vsi</span></button></div>
+              <div className="space-y-2">{members.map(m => { const sel = selectedParticipants.includes(m); return (<div key={m} onClick={() => setSelectedParticipants(prev => prev.includes(m) ? prev.filter(p => p !== m) : [...prev, m])} className={`p-3 rounded-xl border transition-all flex items-center gap-3 cursor-pointer select-none ${sel ? 'bg-[#002f55]/5 dark:bg-[#e4b00f]/10 border-[#002f55]/10 dark:border-[#e4b00f]/20 shadow-sm' : 'border-slate-50 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}><span className={`flex-1 text-sm font-bold ${sel ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500'}`}>{m}</span>{splitType === 'manual' && sel ? (<div onClick={e => e.stopPropagation()}><input type="number" inputMode="decimal" step="0.01" placeholder="0.00" value={manualAmounts[m] || ''} onChange={e => setManualAmounts({ ...manualAmounts, [m]: e.target.value })} className="w-20 p-1 bg-white dark:bg-slate-600 dark:text-white border dark:border-slate-500 rounded text-right text-xs font-bold" /></div>) : (sel && <CheckCircle2 size={16} className="text-[#002f55] dark:text-[#e4b00f]" />)}</div>); })}</div>
+              {splitType === 'manual' && (<div className={`p-3 rounded-xl text-center text-xs font-bold ${isManualBalanced ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'}`}>Vsota: {Object.values(manualAmounts).reduce((a, b) => a + (parseFloat(b) || 0), 0).toFixed(2)} € / {parseFloat(amount || 0).toFixed(2)} €</div>)}
+              <button type="submit" disabled={!amount || selectedParticipants.length === 0 || (splitType === 'manual' && !isManualBalanced)} className="w-full bg-[#002f55] dark:bg-[#e4b00f] text-white dark:text-[#002f55] py-4 rounded-2xl font-black shadow-xl disabled:opacity-30">SHRANI RAČUN</button>
             </form>
           </div>
         );
@@ -1213,30 +1228,30 @@
         const TabHistory = ({ history, confirmDeleteEntry, onToggleBlur }) => (
           <div className="space-y-4 animate-fade-in">
             <div className="flex items-center justify-between px-2">
-                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2"><History className="text-[#002f55]" /> Zgodovina</h3>
-                <button onClick={onToggleBlur} className="text-slate-200 hover:text-[#002f55] transition-colors p-2" title="Admin"><Info size={16} /></button>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2"><History className="text-[#002f55] dark:text-[#e4b00f]" /> Zgodovina</h3>
+                <button onClick={onToggleBlur} className="text-slate-200 dark:text-slate-700 hover:text-[#002f55] dark:hover:text-[#e4b00f] transition-colors p-2" title="Admin"><Info size={16} /></button>
             </div>
             <div className="space-y-3">
               {history.map(e => {
                 const isAdj = e.type === 'adjustment';
                 return (
-                  <div key={e.id} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative group flex justify-between items-start">
+                  <div key={e.id} className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative group flex justify-between items-start transition-colors">
                     <div className="flex gap-3">
-                      <div className="bg-slate-50 w-10 h-10 rounded-xl flex items-center justify-center flex-col text-slate-400 font-bold">
+                      <div className="bg-slate-50 dark:bg-slate-700 w-10 h-10 rounded-xl flex items-center justify-center flex-col text-slate-400 dark:text-slate-300 font-bold">
                         <span className="text-[8px] uppercase">{new Date(e.date).toLocaleString('sl-SI', { month: 'short' })}</span>
                         <span className="text-sm leading-none">{new Date(e.date).getDate()}</span>
                       </div>
                       <div className="flex-1 min-w-0 pr-2">
-                        <p className="text-sm font-bold text-slate-700">
+                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
                           {isAdj ? e.user : e.payer} 
-                          <span className="text-xs font-normal text-slate-400 ml-1">
+                          <span className="text-xs font-normal text-slate-400 dark:text-slate-500 ml-1">
                             {isAdj ? 'prenos stanja' : 'je plačal/a'}
                           </span>
                         </p>
                         <div className="flex flex-col gap-0.5">
-                          <span className="text-[10px] font-bold text-slate-500">{e.opis}</span>
+                          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">{e.opis}</span>
                           {!isAdj && (
-                            <span className="text-[10px] text-slate-400 leading-tight">
+                            <span className="text-[10px] text-slate-400 dark:text-slate-600 leading-tight">
                               {e.participants && e.participants.length > 0 ? e.participants.join(', ') : 'Ni udeležencev'}
                             </span>
                           )}
@@ -1244,8 +1259,8 @@
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-black text-slate-800">{e.amount.toFixed(2)} €</p>
-                      <button onClick={(event) => confirmDeleteEntry(e.id, event)} className="p-2 -mr-2 text-rose-300 hover:text-rose-500 transition-colors mt-1"><Trash2 size={16} /></button>
+                      <p className="font-black text-slate-800 dark:text-white">{e.amount.toFixed(2)} €</p>
+                      <button onClick={(event) => confirmDeleteEntry(e.id, event)} className="p-2 -mr-2 text-rose-300 dark:text-rose-700 hover:text-rose-500 dark:hover:text-rose-500 transition-colors mt-1"><Trash2 size={16} /></button>
                     </div>
                   </div>
                 );
@@ -1257,40 +1272,52 @@
         const TabSettlement = ({ settlements, onPrint, showResetConfirm, setShowResetConfirm, manualStartBalances, setManualStartBalances, members, balances, isResetBalanced, isResetting, finalizeReset, startResetProcess, historyLength, onOpenSettings }) => (
           <div className="space-y-6 animate-fade-in">
             <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Calculator className="text-[#002f55]" /> Obračun</h3>
-                <button onClick={onOpenSettings} className="p-2 bg-slate-100 rounded-full text-slate-500 hover:text-[#002f55] hover:bg-slate-200 transition-all shadow-sm"><Settings size={18} /></button>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2"><Calculator className="text-[#002f55] dark:text-[#e4b00f]" /> Obračun</h3>
+                <button onClick={onOpenSettings} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 hover:text-[#002f55] dark:hover:text-[#e4b00f] hover:bg-slate-200 dark:hover:bg-slate-700 transition-all shadow-sm"><Settings size={18} /></button>
             </div>
-            <div className="bg-white p-6 rounded-3xl shadow-sm border-2 border-slate-100 space-y-4">{settlements.length > 0 ? settlements.map((s, i) => (<div key={i} className="flex items-center gap-3"><div className="flex-1 text-center bg-rose-50 rounded-xl p-2 font-bold text-xs">{s.from}</div><div className="text-center min-w-[60px]"><p className="text-[10px] font-black bg-slate-800 text-white px-2 py-0.5 rounded-full">{s.amount.toFixed(2)} €</p><ArrowRightCircle size={14} className="mx-auto text-slate-200 mt-1" /></div><div className="flex-1 text-center bg-emerald-50 rounded-xl p-2 font-bold text-xs">{s.to}</div></div>)) : <div className="text-center py-10 text-slate-300 italic">Vse je poravnano!</div>}</div>
-            <button onClick={onPrint} className="w-full py-3 bg-[#002f55]/5 text-[#002f55] font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-[#002f55]/10 transition-all border border-[#002f55]/10"><Printer size={18} /> Shrani PDF Poročilo</button>
-            {showResetConfirm ? (<div className="bg-white border-2 border-[#002f55] p-6 rounded-3xl shadow-2xl space-y-6"><div className="flex justify-between items-center mb-2"><h4 className="font-black text-[#002f55] flex items-center gap-2"><RefreshCcw size={20} /> Resetiraj</h4><button onClick={() => setManualStartBalances({ ...balances })} className="text-xs bg-[#002f55]/5 text-[#002f55] px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 hover:bg-[#002f55]/10 transition-all border border-[#002f55]/10"><ArrowDownCircle size={14} /> Prenesi stanja</button></div><p className="text-xs text-slate-400 -mt-4 mb-2">Vpiši ali prenesi končna stanja v novo obdobje.</p><div className="space-y-3 max-h-80 overflow-y-auto pr-1">{members.map(m => (<div key={m} className="flex justify-between items-center gap-4 bg-slate-50 p-2 rounded-xl"><span className="text-sm font-bold text-slate-600">{m}</span><input type="number" step="0.01" placeholder="0.00" value={manualStartBalances[m] || ''} onChange={e => setManualStartBalances({ ...manualStartBalances, [m]: e.target.value })} className="w-24 p-2 rounded-lg border border-[#002f55]/20 text-right font-black text-[#002f55]" /></div>))}</div><div className={`p-3 rounded-2xl text-center text-xs font-bold ${isResetBalanced ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>Vsota vseh stanj: {Object.values(manualStartBalances).reduce((a, b) => a + (parseFloat(b) || 0), 0).toFixed(2)} € (Mora biti 0)</div><div className="flex gap-2"><button onClick={() => setShowResetConfirm(false)} className="flex-1 py-3 text-slate-400 font-bold">Prekliči</button><button disabled={!isResetBalanced || isResetting} onClick={finalizeReset} className="flex-[2] bg-[#002f55] text-white py-3 rounded-2xl font-black shadow-lg shadow-[#002f55]/20 disabled:opacity-20">{isResetting ? 'Brisanje...' : 'POTRDI IN ZAČNI'}</button></div></div>) : (<button disabled={historyLength === 0} onClick={startResetProcess} className="w-full bg-white border-2 border-slate-100 py-5 rounded-3xl font-black text-slate-600 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all"><RefreshCcw size={18} className="text-[#002f55]" /> Zaključi obdobje</button>)}
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border-2 border-slate-100 dark:border-slate-700 space-y-4">{settlements.length > 0 ? settlements.map((s, i) => (<div key={i} className="flex items-center gap-3"><div className="flex-1 text-center bg-rose-50 dark:bg-rose-900/20 rounded-xl p-2 font-bold text-xs text-slate-800 dark:text-rose-100">{s.from}</div><div className="text-center min-w-[60px]"><p className="text-[10px] font-black bg-slate-800 dark:bg-slate-700 text-white px-2 py-0.5 rounded-full">{s.amount.toFixed(2)} €</p><ArrowRightCircle size={14} className="mx-auto text-slate-200 dark:text-slate-600 mt-1" /></div><div className="flex-1 text-center bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-2 font-bold text-xs text-slate-800 dark:text-emerald-100">{s.to}</div></div>)) : <div className="text-center py-10 text-slate-300 dark:text-slate-600 italic">Vse je poravnano!</div>}</div>
+            <button onClick={onPrint} className="w-full py-3 bg-[#002f55]/5 dark:bg-slate-800 text-[#002f55] dark:text-slate-300 font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-[#002f55]/10 dark:hover:bg-slate-700 transition-all border border-[#002f55]/10 dark:border-slate-700"><Printer size={18} /> Shrani PDF Poročilo</button>
+            {showResetConfirm ? (<div className="bg-white dark:bg-slate-800 border-2 border-[#002f55] dark:border-[#e4b00f] p-6 rounded-3xl shadow-2xl space-y-6"><div className="flex justify-between items-center mb-2"><h4 className="font-black text-[#002f55] dark:text-[#e4b00f] flex items-center gap-2"><RefreshCcw size={20} /> Resetiraj</h4><button onClick={() => setManualStartBalances({ ...balances })} className="text-xs bg-[#002f55]/5 dark:bg-[#e4b00f]/10 text-[#002f55] dark:text-[#e4b00f] px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 hover:bg-[#002f55]/10 dark:hover:bg-[#e4b00f]/20 transition-all border border-[#002f55]/10 dark:border-[#e4b00f]/20"><ArrowDownCircle size={14} /> Prenesi stanja</button></div><p className="text-xs text-slate-400 -mt-4 mb-2">Vpiši ali prenesi končna stanja v novo obdobje.</p><div className="space-y-3 max-h-80 overflow-y-auto pr-1">{members.map(m => (<div key={m} className="flex justify-between items-center gap-4 bg-slate-50 dark:bg-slate-700 p-2 rounded-xl"><span className="text-sm font-bold text-slate-600 dark:text-slate-300">{m}</span><input type="number" inputMode="decimal" step="0.01" placeholder="0.00" value={manualStartBalances[m] || ''} onChange={e => setManualStartBalances({ ...manualStartBalances, [m]: e.target.value })} className="w-24 p-2 rounded-lg border border-[#002f55]/20 dark:border-slate-600 text-right font-black text-[#002f55] dark:text-white bg-white dark:bg-slate-800" /></div>))}</div><div className={`p-3 rounded-2xl text-center text-xs font-bold ${isResetBalanced ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'}`}>Vsota vseh stanj: {Object.values(manualStartBalances).reduce((a, b) => a + (parseFloat(b) || 0), 0).toFixed(2)} € (Mora biti 0)</div><div className="flex gap-2"><button onClick={() => setShowResetConfirm(false)} className="flex-1 py-3 text-slate-400 font-bold">Prekliči</button><button disabled={!isResetBalanced || isResetting} onClick={finalizeReset} className="flex-[2] bg-[#002f55] dark:bg-[#e4b00f] text-white dark:text-[#002f55] py-3 rounded-2xl font-black shadow-lg shadow-[#002f55]/20 disabled:opacity-20">{isResetting ? 'Brisanje...' : 'POTRDI IN ZAČNI'}</button></div></div>) : (<button disabled={historyLength === 0} onClick={startResetProcess} className="w-full bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 py-5 rounded-3xl font-black text-slate-600 dark:text-slate-300 flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"><RefreshCcw size={18} className="text-[#002f55] dark:text-[#e4b00f]" /> Zaključi obdobje</button>)}
           </div>
         );
 
-        const TabSettings = ({ members, history, removeMember, showAddMember, setShowAddMember, newMemberName, setNewMemberName, addMember, generateDemoData }) => (
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 animate-fade-in">
-            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2"><UserPlus className="text-[#002f55]" /> Ekipa</h3>
+        const TabSettings = ({ members, history, removeMember, showAddMember, setShowAddMember, newMemberName, setNewMemberName, addMember, darkMode, toggleDarkMode }) => (
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 animate-fade-in transition-colors">
+            
+            {/* DARK MODE TOGGLE */}
+            <div className="flex justify-between items-center mb-8 bg-slate-50 dark:bg-slate-700/50 p-4 rounded-2xl">
+                <div className="flex items-center gap-3">
+                    <div className="bg-[#002f55] dark:bg-[#e4b00f] text-white dark:text-[#002f55] p-2 rounded-xl">
+                        {darkMode ? <Moon size={20} /> : <Sun size={20} />}
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-slate-800 dark:text-white text-sm">Videz aplikacije</h4>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase">{darkMode ? 'Temni način' : 'Svetli način'}</p>
+                    </div>
+                </div>
+                <button 
+                    onClick={toggleDarkMode}
+                    className={`w-14 h-8 rounded-full p-1 transition-colors duration-300 ease-in-out ${darkMode ? 'bg-[#e4b00f]' : 'bg-slate-200'}`}
+                >
+                    <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out flex items-center justify-center ${darkMode ? 'translate-x-6' : 'translate-x-0'}`}>
+                        {darkMode ? <Moon size={12} className="text-[#002f55]" /> : <Sun size={12} className="text-orange-400" />}
+                    </div>
+                </button>
+            </div>
+
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2"><UserPlus className="text-[#002f55] dark:text-[#e4b00f]" /> Ekipa</h3>
             <div className="space-y-2 mb-6">
               {members.map(m => (
-                <div key={m} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl group transition-all hover:bg-white hover:shadow-sm">
-                  <span className="font-bold text-slate-600">{m}</span>
+                <div key={m} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700 rounded-xl group transition-all hover:bg-white dark:hover:bg-slate-600 hover:shadow-sm">
+                  <span className="font-bold text-slate-600 dark:text-slate-200">{m}</span>
                   {history.length === 0 && <button onClick={() => removeMember(m)} className="text-rose-200 hover:text-rose-500"><Trash2 size={16} /></button>}
                 </div>
               ))}
             </div>
             {!showAddMember ? (
-              <button onClick={() => setShowAddMember(true)} className="w-full py-4 border-2 border-dashed border-slate-200 text-slate-400 rounded-2xl flex items-center justify-center gap-2 font-bold text-xs">DODAJ ČLANA</button>
+              <button onClick={() => setShowAddMember(true)} className="w-full py-4 border-2 border-dashed border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500 rounded-2xl flex items-center justify-center gap-2 font-bold text-xs">DODAJ ČLANA</button>
             ) : (
-              <div className="flex gap-2 mb-4"><input autoFocus type="text" value={newMemberName} onChange={e => setNewMemberName(e.target.value)} placeholder="Ime..." className="flex-1 p-3 bg-slate-100 rounded-xl outline-none" onKeyDown={e => e.key === 'Enter' && addMember()} /><button onClick={addMember} className="bg-[#002f55] text-white px-6 rounded-xl font-black">DODAJ</button></div>
-            )}
-            
-            {/* GUMB ZA DEMO PODATKE */}
-            {history.length === 0 && members.length > 0 && (
-                <div className="mt-8 pt-4 border-t border-slate-100">
-                    <p className="text-xs text-slate-400 mb-2 text-center">Baza je prazna. Želiš testne podatke?</p>
-                    <button onClick={generateDemoData} className="w-full py-3 bg-indigo-50 text-indigo-600 font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-indigo-100 transition-all border border-indigo-100">
-                        <Database size={16} /> Generiraj Demo Podatke
-                    </button>
-                </div>
+              <div className="flex gap-2 mb-4"><input autoFocus type="text" value={newMemberName} onChange={e => setNewMemberName(e.target.value)} placeholder="Ime..." className="flex-1 p-3 bg-slate-100 dark:bg-slate-700 dark:text-white rounded-xl outline-none" onKeyDown={e => e.key === 'Enter' && addMember()} /><button onClick={addMember} className="bg-[#002f55] dark:bg-[#e4b00f] text-white dark:text-[#002f55] px-6 rounded-xl font-black">DODAJ</button></div>
             )}
           </div>
         );
@@ -1340,6 +1367,27 @@
 
           const [showMessageModal, setShowMessageModal] = useState(false);
           const [messageInput, setMessageInput] = useState("");
+
+          // --- DARK MODE STATE ---
+          const [darkMode, setDarkMode] = useState(() => {
+              if (typeof window !== 'undefined') {
+                  const saved = localStorage.getItem('darkMode');
+                  return saved === 'true' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+              }
+              return false;
+          });
+
+          useEffect(() => {
+              if (darkMode) {
+                  document.documentElement.classList.add('dark');
+                  localStorage.setItem('darkMode', 'true');
+              } else {
+                  document.documentElement.classList.remove('dark');
+                  localStorage.setItem('darkMode', 'false');
+              }
+          }, [darkMode]);
+
+          const toggleDarkMode = () => setDarkMode(!darkMode);
 
           // EASTER EGG STATES
           const [snakeMode, setSnakeMode] = useState(false);
@@ -1515,6 +1563,13 @@
             setShowAdminAuth(true);
           };
 
+          const handleToggleDarkMode = () => {
+            setPendingAction({ type: 'TOGGLE_DARK_MODE' });
+            setAdminPinInput('');
+            setAdminAuthError(false);
+            setShowAdminAuth(true);
+          };
+
           // --- NEW INSTANT TOGGLE BLUR FOR SNAKE GAME ---
           const instantToggleBlur = async () => {
               if (!user) return;
@@ -1637,57 +1692,13 @@
              }, { merge: true });
           };
 
-          const handleGenerateDemoData = () => {
-              setPendingAction({ type: 'DEMO_DATA' });
-              setAdminPinInput('');
-              setAdminAuthError(false);
-              setShowAdminAuth(true);
-          };
-
-          const performGenerateDemoData = async () => {
-              if (!user || members.length < 2) return;
-              
-              const batch = writeBatch(db);
-              const demoDescriptions = ["Petkova Pica", "Kave za ekipo", "Burek", "Kitajska restavracija", "Rojstni dan", "Sendviči", "Pijača po službi", "Zajtrk", "Burgerji", "Sladoled"];
-              
-              // Generiraj 15 naključnih transakcij
-              for (let i = 0; i < 15; i++) {
-                  const randomPayer = members[Math.floor(Math.random() * members.length)];
-                  const randomAmount = Math.floor(Math.random() * 50) + 5;
-                  const randomDesc = demoDescriptions[Math.floor(Math.random() * demoDescriptions.length)];
-                  
-                  // Generiraj naključne udeležence (vsaj 2)
-                  const shuffled = [...members].sort(() => 0.5 - Math.random());
-                  const participants = shuffled.slice(0, Math.max(2, Math.floor(Math.random() * members.length)));
-                  
-                  // Datum v zadnjih 30 dneh
-                  const date = new Date();
-                  date.setDate(date.getDate() - Math.floor(Math.random() * 30));
-                  const dateStr = date.toISOString().split('T')[0];
-
-                  const historyRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'history'));
-                  batch.set(historyRef, {
-                      date: dateStr,
-                      payer: randomPayer,
-                      amount: randomAmount,
-                      participants: participants,
-                      splitType: 'equal',
-                      timestamp: Date.now() - (i * 100000), // Da ohranimo nek vrstni red
-                      opis: randomDesc
-                  });
-              }
-              await batch.commit();
-              triggerFireworks();
-              setActiveTab('analytics');
-          };
-
           const verifyAdminPin = async () => {
             const pin = adminPinInput;
             const action = pendingAction?.type;
             let valid = false;
 
-            if ((action === 'DELETE' || action === 'RESET' || action === 'TOGGLE_BLUR') && pin === ADMIN_PIN) valid = true;
-            else if ((action === 'ADD' || action === 'ADD_MEMBER' || action === 'DEMO_DATA') && (pin === EDIT_CODE || pin === ADMIN_PIN)) valid = true;
+            if ((action === 'DELETE' || action === 'RESET' || action === 'TOGGLE_BLUR' || action === 'TOGGLE_DARK_MODE') && pin === ADMIN_PIN) valid = true;
+            else if ((action === 'ADD' || action === 'ADD_MEMBER') && (pin === EDIT_CODE || pin === ADMIN_PIN)) valid = true;
 
             if (valid) {
               setShowAdminAuth(false);
@@ -1705,8 +1716,8 @@
               } else if (action === 'TOGGLE_BLUR') {
                 const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
                 await setDoc(settingsRef, { isBlurred: !globalSettings.isBlurred });
-              } else if (action === 'DEMO_DATA') {
-                  performGenerateDemoData();
+              } else if (action === 'TOGGLE_DARK_MODE') {
+                toggleDarkMode();
               }
               setPendingAction(null);
             } else {
@@ -1759,7 +1770,7 @@
           if (loading) return <LoadingScreen />;
 
           return (
-            <div className="min-h-screen bg-slate-50 pb-24 font-sans app-container">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 font-sans app-container transition-colors duration-300">
               <style>{`
                 @media print {
                     @page { margin: 1cm; size: A4; }
@@ -1802,7 +1813,9 @@
                 .print-container { display: none; }
                 .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+                .dark .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+                .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
                 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
                 .animate-fade-in { animation: fadeIn 0.3s ease-out; }
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -1832,7 +1845,7 @@
 
               <PrintReport history={history} members={members} balances={balances} settlements={settlements} />
 
-              <header className="bg-gradient-to-br from-[#002f55] to-[#001f3f] text-white p-6 rounded-b-[2.5rem] shadow-xl mb-6 print:hidden text-center relative overflow-hidden">
+              <header className="bg-gradient-to-br from-[#002f55] to-[#001f3f] dark:from-[#001f3f] dark:to-[#000a1f] text-white p-6 rounded-b-[2.5rem] shadow-xl mb-6 print:hidden text-center relative overflow-hidden transition-colors">
                 <h1 
                     onClick={handleTitleClick}
                     className="text-2xl font-bold flex items-center justify-center gap-2 relative z-10 cursor-pointer select-none active:scale-95 transition-transform"
@@ -1860,7 +1873,7 @@
                 )}
                 
                 {/* AKTIVACIJA NOVEGA ZAVIHEKA */}
-                {activeTab === 'analytics' && <TabAnalytics history={history} members={members} setActiveTab={setActiveTab} isBlurred={globalSettings.isBlurred} />}
+                {activeTab === 'analytics' && <TabAnalytics history={history} members={members} setActiveTab={setActiveTab} isBlurred={globalSettings.isBlurred} darkMode={darkMode} />}
                 
                 {activeTab === 'matrix' && <TabMatrix members={members} history={history} matrixType={matrixType} setMatrixType={setMatrixType} onPrint={handlePrintReport} />}
                 {activeTab === 'add' && (
@@ -1886,7 +1899,7 @@
                     members={members} history={history} removeMember={removeMember} 
                     showAddMember={showAddMember} setShowAddMember={setShowAddMember} 
                     newMemberName={newMemberName} setNewMemberName={setNewMemberName} addMember={addMemberAction} 
-                    generateDemoData={handleGenerateDemoData}
+                    darkMode={darkMode} toggleDarkMode={handleToggleDarkMode}
                   />
                 )}
               </main>

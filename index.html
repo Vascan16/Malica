@@ -65,10 +65,10 @@
           AlertTriangle, FileText, CheckSquare, Square, Lock, Info, Scale, 
           ListOrdered, RefreshCcw, Save, Table, Grid, Printer, Bell, X, 
           Crown, PiggyBank, Ghost, Medal, Dices, Eye, EyeOff, BarChart3, Pizza, Settings, Utensils, StickyNote, PenLine,
-          PieChart as IconPieChart, Activity, Database, ArrowRight
+          PieChart as IconPieChart, Activity, Database, ArrowRight, Play, Pause, RotateCcw, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Gamepad2
         } from 'lucide-react';
         
-        // --- RECHARTS IMPORTS (Zamenjan AreaChart z LineChart) ---
+        // --- RECHARTS IMPORTS ---
         import { 
             PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, 
             Legend, LineChart, Line, XAxis, YAxis, CartesianGrid, ReferenceLine
@@ -95,7 +95,7 @@
            serverTimestamp 
          } from 'firebase/firestore';
 
-        // ... (Error Boundary in Config ostanejo enaki) ...
+        // Error Boundary
         class ErrorBoundary extends React.Component {
             constructor(props) { super(props); this.state = { hasError: false, error: null }; }
             static getDerivedStateFromError(error) { return { hasError: true, error }; }
@@ -106,7 +106,7 @@
                         <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-slate-50 text-slate-800 font-sans">
                             <div className="bg-white p-8 rounded-3xl shadow-xl border-2 border-rose-100 max-w-sm">
                                 <div className="bg-rose-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-500">
-                                    <AlertTriangle size={32} />
+                                    <alertTriangle size={32} />
                                 </div>
                                 <h1 className="text-xl font-black mb-2">Ups, nekaj se je zalomilo!</h1>
                                 <p className="text-xs text-slate-500 mb-6 font-mono bg-slate-100 p-2 rounded">
@@ -268,10 +268,10 @@
           const membersStr = `clani = {${members.map(m => `'${m}'`).join(', ')}};`;
           const zVector = members.map(m => adjustments.reduce((s, e) => s + (e.user === m ? e.amount : 0), 0).toFixed(2)).join(', ');
           const zStr = `Z = [${zVector}]; % Začetna stanja`;
-           
+            
           const pRows = transactions.length > 0 ? transactions.map(t => members.map(m => getMatrixValue(t, m, 'P').toFixed(2)).join(', ')) : [members.map(() => '0.00').join(', ')];
           const pStr = `P = [\n  ${pRows.join(';\n   ')}\n]; % Matrika Plačil (P)`;
-           
+            
           const sRows = transactions.length > 0 ? transactions.map(t => members.map(m => getMatrixValue(t, m, 'S').toFixed(2)).join(', ')) : [members.map(() => '0.00').join(', ')];
           const sStr = `S = [\n  ${sRows.join(';\n   ')}\n]; % Matrika Porabe (S)`;
 
@@ -283,63 +283,6 @@
         // ==========================================
         // 3. UI KOMPONENTE
         // ==========================================
-
-        const LunchTicker = ({ balances, history, memberHunger, dailyMessage }) => {
-            const tickerItems = useMemo(() => {
-                const list = [];
-                Object.entries(balances).forEach(([name, amount]) => {
-                    list.push({ 
-                        type: 'balance', 
-                        text: `${name}: ${amount >= 0 ? '▲' : '▼'} ${Math.abs(amount).toFixed(2)} €`, 
-                        color: amount >= 0 ? 'text-emerald-400' : 'text-rose-400' 
-                    });
-                });
-
-                if (dailyMessage) {
-                    list.unshift({ type: 'msg', text: `📢 OBVESTILO: ${dailyMessage}`, color: 'text-yellow-400 font-bold' });
-                }
-
-                const lastEntry = history.find(e => e.type !== 'adjustment');
-                if (lastEntry) {
-                    list.push({ type: 'news', text: `📰 ZADNJE: ${lastEntry.payer} plačal/a "${lastEntry.opis}" (${parseFloat(lastEntry.amount).toFixed(2)}€)`, color: 'text-blue-300' });
-                }
-
-                const hungryCount = Object.values(memberHunger).filter(v => v).length;
-                const totalMembers = Object.keys(balances).length;
-                if (totalMembers > 0) { 
-                    list.push({ type: 'stat', text: `🍔 LAKOTA: ${hungryCount}/${totalMembers}`, color: hungryCount > 0 ? 'text-orange-400' : 'text-slate-400' });
-                }
-
-                const vol = Object.values(balances).reduce((sum, v) => v > 0 ? sum + v : sum, 0);
-                list.push({ type: 'stat', text: `📊 OBSEG: ${vol.toFixed(2)} €`, color: 'text-purple-300' });
-
-                const recentMeals = history.filter(e => e.type !== 'adjustment').slice(0, 10);
-                if (recentMeals.length > 0) {
-                    const totalSpent = recentMeals.reduce((acc, e) => acc + (parseFloat(e.amount)||0), 0);
-                    const totalPeople = recentMeals.reduce((acc, e) => acc + (e.participants?.length || 0), 0);
-                    const avg = totalPeople ? totalSpent / totalPeople : 0;
-                    list.push({ type: 'stat', text: `📈 IND. MALICE: ${avg.toFixed(2)}€/osebo`, color: 'text-cyan-300' });
-                }
-
-                return list;
-            }, [balances, history, memberHunger, dailyMessage]);
-
-            if (tickerItems.length === 0) return null;
-
-            const displayItems = [...tickerItems, ...tickerItems, ...tickerItems];
-
-            return (
-                <div className="fixed bottom-[72px] left-0 right-0 bg-[#001f3f] text-white overflow-hidden py-1.5 z-40 border-t border-[#002f55] shadow-lg print:hidden h-8 flex items-center">
-                    <div className="animate-scroll flex gap-8 whitespace-nowrap px-4">
-                        {displayItems.map((item, i) => (
-                            <div key={i} className={`flex items-center gap-1.5 text-[10px] font-mono tracking-wide ${item.color || 'text-white'}`}>
-                                {item.text}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            );
-        };
 
         const StatisticsModal = ({ show, onClose, history }) => {
           const stats = useMemo(() => {
@@ -580,9 +523,9 @@
                 </div>
                 <div className="bg-white rounded-3xl p-8 shadow-[0_0_50px_rgba(228,176,15,0.3)] border-4 border-[#e4b00f] relative overflow-hidden">
                   <div className="h-24 flex items-center justify-center overflow-hidden">
-                     <div className={`text-4xl font-black text-[#002f55] transition-all ${winner ? 'scale-125' : ''}`}>
-                       {currentName}
-                     </div>
+                      <div className={`text-4xl font-black text-[#002f55] transition-all ${winner ? 'scale-125' : ''}`}>
+                        {currentName}
+                      </div>
                   </div>
                   {winner && <div className="absolute inset-0 pointer-events-none flex items-center justify-center"><div className="w-full h-full bg-[#e4b00f]/10 animate-pulse"></div></div>}
                 </div>
@@ -591,6 +534,228 @@
               </div>
             </div>
           );
+        };
+
+        const SnakeGame = ({ onClose }) => {
+            const canvasRef = useRef(null);
+            const [score, setScore] = useState(0);
+            const [highScore, setHighScore] = useState(parseInt(localStorage.getItem('snake_highscore') || '0'));
+            const [gameOver, setGameOver] = useState(false);
+            const [isPaused, setIsPaused] = useState(false);
+            
+            // Game State Refs
+            const snake = useRef([{x: 10, y: 10}]);
+            const food = useRef({x: 15, y: 5, emoji: '🍕'});
+            const dir = useRef({x: 0, y: 0});
+            const nextDir = useRef({x: 0, y: 0});
+            const gameLoopRef = useRef(null);
+            
+            const GRID_COUNT = 20;
+            const CELL_SIZE = 15; // Base size, scaled by canvas
+            const FOODS = ['🍕', '🍔', '🍟', '🌮', '🍩', '🍎', '🍐', '🍌'];
+
+            const startGame = () => {
+                snake.current = [{x: 10, y: 10}];
+                dir.current = {x: 0, y: 0};
+                nextDir.current = {x: 0, y: 0};
+                setScore(0);
+                setGameOver(false);
+                setIsPaused(false);
+                placeFood();
+                if(gameLoopRef.current) clearInterval(gameLoopRef.current);
+                gameLoopRef.current = setInterval(gameLoop, 200);
+            };
+
+            const placeFood = () => {
+                let newFood;
+                let isOnSnake = true;
+                while(isOnSnake) {
+                    newFood = {
+                        x: Math.floor(Math.random() * GRID_COUNT),
+                        y: Math.floor(Math.random() * GRID_COUNT),
+                        emoji: FOODS[Math.floor(Math.random() * FOODS.length)]
+                    };
+                    isOnSnake = snake.current.some(s => s.x === newFood.x && s.y === newFood.y);
+                }
+                food.current = newFood;
+            };
+
+            const gameLoop = () => {
+                if(gameOver || isPaused) return;
+                
+                dir.current = nextDir.current;
+                if(dir.current.x === 0 && dir.current.y === 0) return;
+
+                const head = { ...snake.current[0] };
+                head.x += dir.current.x;
+                head.y += dir.current.y;
+
+                // Collision with walls
+                if(head.x < 0 || head.x >= GRID_COUNT || head.y < 0 || head.y >= GRID_COUNT) {
+                    handleGameOver();
+                    return;
+                }
+
+                // Collision with self
+                if(snake.current.some(s => s.x === head.x && s.y === head.y)) {
+                    handleGameOver();
+                    return;
+                }
+
+                snake.current.unshift(head);
+
+                // Eat food
+                if(head.x === food.current.x && head.y === food.current.y) {
+                    setScore(s => {
+                        const newScore = s + 1;
+                        if(newScore > highScore) {
+                            setHighScore(newScore);
+                            localStorage.setItem('snake_highscore', newScore);
+                        }
+                        return newScore;
+                    });
+                    confetti({
+                        particleCount: 20,
+                        spread: 50,
+                        origin: { y: 0.8 },
+                        colors: ['#e4b00f', '#10b981'],
+                        startVelocity: 15,
+                        disableForReducedMotion: true,
+                        zIndex: 1000
+                    });
+                    placeFood();
+                } else {
+                    snake.current.pop();
+                }
+                draw();
+            };
+
+            const handleGameOver = () => {
+                setGameOver(true);
+                clearInterval(gameLoopRef.current);
+            };
+
+            const draw = () => {
+                const canvas = canvasRef.current;
+                if(!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const width = canvas.width;
+                const cellSize = width / GRID_COUNT;
+
+                // Clear
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(0, 0, width, width);
+
+                // Grid (Optional - faint)
+                ctx.strokeStyle = '#1e293b';
+                ctx.lineWidth = 1;
+                for(let i=0; i<=GRID_COUNT; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(i*cellSize, 0);
+                    ctx.lineTo(i*cellSize, width);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(0, i*cellSize);
+                    ctx.lineTo(width, i*cellSize);
+                    ctx.stroke();
+                }
+
+                // Food
+                ctx.font = `${cellSize - 2}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(food.current.emoji, food.current.x * cellSize + cellSize/2, food.current.y * cellSize + cellSize/2 + 2);
+
+                // Snake
+                snake.current.forEach((segment, i) => {
+                    ctx.fillStyle = i === 0 ? '#e4b00f' : '#10b981';
+                    ctx.beginPath();
+                    ctx.roundRect(
+                        segment.x * cellSize + 1, 
+                        segment.y * cellSize + 1, 
+                        cellSize - 2, 
+                        cellSize - 2, 
+                        4
+                    );
+                    ctx.fill();
+                });
+            };
+
+            useEffect(() => {
+                startGame();
+                const handleKey = (e) => {
+                    switch(e.key) {
+                        case 'ArrowUp': if(dir.current.y !== 1) nextDir.current = {x: 0, y: -1}; break;
+                        case 'ArrowDown': if(dir.current.y !== -1) nextDir.current = {x: 0, y: 1}; break;
+                        case 'ArrowLeft': if(dir.current.x !== 1) nextDir.current = {x: -1, y: 0}; break;
+                        case 'ArrowRight': if(dir.current.x !== -1) nextDir.current = {x: 1, y: 0}; break;
+                    }
+                };
+                window.addEventListener('keydown', handleKey);
+                return () => {
+                    window.removeEventListener('keydown', handleKey);
+                    clearInterval(gameLoopRef.current);
+                };
+            }, []);
+
+            useEffect(() => {
+                draw();
+            }, [gameOver, score]); // Redraw on state change too
+
+            const handleTouchControl = (d) => {
+                switch(d) {
+                    case 'UP': if(dir.current.y !== 1) nextDir.current = {x: 0, y: -1}; break;
+                    case 'DOWN': if(dir.current.y !== -1) nextDir.current = {x: 0, y: 1}; break;
+                    case 'LEFT': if(dir.current.x !== 1) nextDir.current = {x: -1, y: 0}; break;
+                    case 'RIGHT': if(dir.current.x !== -1) nextDir.current = {x: 1, y: 0}; break;
+                }
+            };
+
+            return (
+                <div className="fixed inset-0 bg-slate-900/95 z-[100] flex flex-col items-center justify-center p-4 backdrop-blur-sm animate-fade-in touch-none select-none">
+                    <div className="w-full max-w-sm flex flex-col items-center">
+                        <div className="flex justify-between w-full mb-4 text-white items-center">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] text-slate-400 uppercase font-bold">Score</span>
+                                <span className="text-2xl font-black font-mono text-[#e4b00f]">{score} €</span>
+                            </div>
+                            <div className="flex flex-col text-right">
+                                <span className="text-[10px] text-slate-400 uppercase font-bold">Best</span>
+                                <span className="text-xl font-bold font-mono">{highScore} €</span>
+                            </div>
+                            <button onClick={onClose} className="bg-slate-800 p-2 rounded-full text-white hover:bg-slate-700 ml-4"><X size={20}/></button>
+                        </div>
+
+                        <div className="relative border-4 border-slate-700 rounded-xl overflow-hidden shadow-2xl bg-[#0f172a]">
+                            <canvas ref={canvasRef} width={300} height={300} className="block" />
+                            
+                            {gameOver && (
+                                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white">
+                                    <h2 className="text-3xl font-black text-rose-500 mb-2">GAME OVER</h2>
+                                    <p className="mb-4">Zaslužek: {score} €</p>
+                                    <button onClick={startGame} className="bg-[#e4b00f] text-[#002f55] px-6 py-3 rounded-xl font-black flex items-center gap-2 hover:scale-105 transition-transform"><RotateCcw size={20} /> PONOVI</button>
+                                </div>
+                            )}
+                            
+                            {!gameOver && score === 0 && dir.current.x === 0 && dir.current.y === 0 && (
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <p className="text-white/50 text-xs animate-pulse">Pritisni smer za start</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Mobile Controls */}
+                        <div className="mt-8 grid grid-cols-3 gap-2 w-full max-w-[200px]">
+                            <div></div>
+                            <button className="bg-slate-800/80 p-4 rounded-xl text-white flex justify-center active:bg-[#e4b00f] active:text-[#002f55] transition-colors" onPointerDown={(e) => {e.preventDefault(); handleTouchControl('UP');}}><ChevronUp size={24} /></button>
+                            <div></div>
+                            <button className="bg-slate-800/80 p-4 rounded-xl text-white flex justify-center active:bg-[#e4b00f] active:text-[#002f55] transition-colors" onPointerDown={(e) => {e.preventDefault(); handleTouchControl('LEFT');}}><ChevronLeft size={24} /></button>
+                            <button className="bg-slate-800/80 p-4 rounded-xl text-white flex justify-center active:bg-[#e4b00f] active:text-[#002f55] transition-colors" onPointerDown={(e) => {e.preventDefault(); handleTouchControl('DOWN');}}><ChevronDown size={24} /></button>
+                            <button className="bg-slate-800/80 p-4 rounded-xl text-white flex justify-center active:bg-[#e4b00f] active:text-[#002f55] transition-colors" onPointerDown={(e) => {e.preventDefault(); handleTouchControl('RIGHT');}}><ChevronRight size={24} /></button>
+                        </div>
+                    </div>
+                </div>
+            );
         };
 
         const AdminModal = ({ show, pin, setPin, error, pendingAction, onConfirm, onCancel }) => {
@@ -695,6 +860,16 @@
         // ==========================================
 
         const TabAnalytics = ({ history, members, setActiveTab }) => {
+            // 1. MAPPING BARV (Barva je vezana na ime člana)
+            const memberColorMap = useMemo(() => {
+                const map = {};
+                members.forEach((m, i) => {
+                    map[m] = CHART_COLORS[i % CHART_COLORS.length];
+                });
+                return map;
+            }, [members]);
+
+            // 2. PIE DATA (Uporabi barvo iz mape)
             const pieData = useMemo(() => {
                 const consumption = {};
                 members.forEach(m => consumption[m] = 0);
@@ -708,31 +883,38 @@
                 });
 
                 return Object.keys(consumption)
-                    .map(name => ({ name, value: consumption[name] }))
+                    .map(name => ({ 
+                        name, 
+                        value: consumption[name],
+                        color: memberColorMap[name] // Barva vezana na ime
+                    }))
                     .filter(item => item.value > 0)
                     .sort((a, b) => b.value - a.value);
-            }, [history, members]);
+            }, [history, members, memberColorMap]);
 
+            // 3. TIME DATA (Agregacija po dnevih za gladek graf)
             const timeData = useMemo(() => {
                 const validHistory = history.filter(h => h.date);
-                const sortedHistory = [...validHistory].sort((a, b) => new Date(a.date) - new Date(b.date));
+                // Sortiramo kronološko + adjustmenti imajo prednost na isti dan
+                const sortedHistory = [...validHistory].sort((a, b) => {
+                    const dateA = new Date(a.date);
+                    const dateB = new Date(b.date);
+                    const diff = dateA - dateB;
+                    
+                    if (diff !== 0) return diff;
+                    
+                    // Če sta datuma enaka, naj bo 'adjustment' (reset) PRVI
+                    if (a.type === 'adjustment' && b.type !== 'adjustment') return -1;
+                    if (a.type !== 'adjustment' && b.type === 'adjustment') return 1;
+                    return 0;
+                });
                 
                 let currentBalances = {};
                 members.forEach(m => currentBalances[m] = 0);
                 
-                const dataPoints = [];
+                const groupedByDate = {};
 
-                // Dodaj začetno točko (če ni zgodovine, da ne bo prazno)
-                if (sortedHistory.length > 0) {
-                    const firstDate = new Date(sortedHistory[0].date);
-                    firstDate.setDate(firstDate.getDate() - 1);
-                    dataPoints.push({
-                        date: 'Start',
-                        fullDate: firstDate.toISOString(),
-                        ...currentBalances
-                    });
-                }
-
+                // Procesiraj transakcije
                 sortedHistory.forEach(entry => {
                     if (entry.type === 'adjustment') {
                         currentBalances[entry.user] = (currentBalances[entry.user] || 0) + entry.amount;
@@ -743,16 +925,37 @@
                             currentBalances[m] -= consumed;
                         });
                     }
-                    
+                    // Shrani/Povozi stanje za ta datum (vedno obvelja zadnje stanje dneva)
+                    groupedByDate[entry.date] = { ...currentBalances };
+                });
+
+                const dataPoints = [];
+                const sortedDates = Object.keys(groupedByDate).sort((a, b) => new Date(a) - new Date(b));
+
+                // Če imamo zgodovino, dodaj začetno točko 0 le, če PRVI vnos NI adjustment (reset)
+                // Če je bil reset, začnemo pri vrednostih reseta.
+                const hasResetStart = sortedHistory.length > 0 && sortedHistory[0].type === 'adjustment';
+                
+                if (!hasResetStart && sortedDates.length > 0) {
+                      // Dodaj "Start" točko dan pred prvo transakcijo, da graf ne lebdi
+                      const firstDate = new Date(sortedDates[0]);
+                      firstDate.setDate(firstDate.getDate() - 1);
+                      const startPoint = { date: 'Start', fullDate: firstDate.toISOString() };
+                      members.forEach(m => startPoint[m] = 0);
+                      dataPoints.push(startPoint);
+                }
+
+                sortedDates.forEach(dateStr => {
                     const point = { 
-                        date: new Date(entry.date).toLocaleDateString('sl-SI', { day: 'numeric', month: 'short' }),
-                        fullDate: entry.date,
-                        ...currentBalances 
+                        date: new Date(dateStr).toLocaleDateString('sl-SI', { day: 'numeric', month: 'short' }),
+                        fullDate: dateStr,
+                        ...groupedByDate[dateStr] 
                     };
-                    members.forEach(m => point[m] = parseFloat(point[m].toFixed(2)));
+                    members.forEach(m => point[m] = parseFloat((point[m] || 0).toFixed(2)));
                     dataPoints.push(point);
                 });
 
+                // Vzemi zadnjih 30 točk (dni), da graf ni prenatrpan
                 return dataPoints.length > 30 ? dataPoints.slice(dataPoints.length - 30) : dataPoints;
             }, [history, members]);
 
@@ -789,7 +992,7 @@
                                         dataKey="value"
                                     >
                                         {pieData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
                                         ))}
                                     </Pie>
                                     <RechartsTooltip 
@@ -828,12 +1031,12 @@
                                     <RechartsTooltip 
                                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
                                     />
-                                    {members.map((m, i) => (
+                                    {members.map((m) => (
                                         <Line 
                                             key={m}
                                             type="monotone" 
                                             dataKey={m} 
-                                            stroke={CHART_COLORS[i % CHART_COLORS.length]} 
+                                            stroke={memberColorMap[m]} 
                                             strokeWidth={2}
                                             dot={false}
                                             activeDot={{ r: 4 }}
@@ -1107,7 +1310,26 @@
 
           const [showMessageModal, setShowMessageModal] = useState(false);
           const [messageInput, setMessageInput] = useState("");
+
+          // EASTER EGG STATES
+          const [snakeMode, setSnakeMode] = useState(false);
+          const titleClicksRef = useRef(0);
+          const titleClickTimeoutRef = useRef(null);
           
+          const handleTitleClick = () => {
+              titleClicksRef.current += 1;
+              if (titleClickTimeoutRef.current) clearTimeout(titleClickTimeoutRef.current);
+              
+              if (titleClicksRef.current >= 5) {
+                  setSnakeMode(true);
+                  titleClicksRef.current = 0;
+              } else {
+                  titleClickTimeoutRef.current = setTimeout(() => {
+                      titleClicksRef.current = 0;
+                  }, 1000); // Reset after 1 second
+              }
+          };
+
           // --- 1. PRIJAVA IN SINHRONIZACIJA ---
           useEffect(() => {
             const initAuth = async () => {
@@ -1528,11 +1750,11 @@
                     
                     /* Print container styling */
                     .print-container { 
-                         font-family: sans-serif; 
-                         font-size: 10px; 
-                         color: black; 
-                         background: white; 
-                     }
+                          font-family: sans-serif; 
+                          font-size: 10px; 
+                          color: black; 
+                          background: white; 
+                      }
 
                     /* Ensure tables print nicely */
                     table { width: 100%; border-collapse: collapse; }
@@ -1563,25 +1785,31 @@
               <RouletteModal members={members} balances={balances} show={showRoulette} onClose={() => setShowRoulette(false)} />
               <MessageModal show={showMessageModal} message={messageInput} setMessage={setMessageInput} onConfirm={saveMessageFromModal} onCancel={() => setShowMessageModal(false)} />
               
+              {/* EASTER EGG GAME */}
+              {snakeMode && <SnakeGame onClose={() => setSnakeMode(false)} />}
+
               <StatisticsModal show={showStats} onClose={() => setShowStats(false)} history={history} />
 
               <PrintReport history={history} members={members} balances={balances} settlements={settlements} />
 
-              <LunchTicker balances={balances} history={history} memberHunger={memberHunger} dailyMessage={globalSettings.dailyMessage} />
-
               <header className="bg-gradient-to-br from-[#002f55] to-[#001f3f] text-white p-6 rounded-b-[2.5rem] shadow-xl mb-6 print:hidden text-center relative overflow-hidden">
-                <h1 className="text-2xl font-bold flex items-center justify-center gap-2 relative z-10"><Wallet className="text-[#e4b00f]" /> Malica Manager</h1>
+                <h1 
+                    onClick={handleTitleClick}
+                    className="text-2xl font-bold flex items-center justify-center gap-2 relative z-10 cursor-pointer select-none active:scale-95 transition-transform"
+                >
+                    <Wallet className="text-[#e4b00f]" /> Malica Manager
+                </h1>
                 <div className="flex items-center justify-center gap-2 mt-1"><div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div><p className="text-[#e4b00f] text-[10px] uppercase tracking-widest opacity-80">Cloud Sync Active</p></div>
               </header>
 
               <main className="max-w-md mx-auto px-4 print:hidden">
                 {activeTab === 'dashboard' && (
                   <TabDashboard 
-                     payerRanking={payerRanking} 
-                     balances={balances} 
-                     setActiveTab={setActiveTab} 
-                     titles={titles} 
-                     onOpenRoulette={() => setShowRoulette(true)}
+                      payerRanking={payerRanking} 
+                      balances={balances} 
+                      setActiveTab={setActiveTab} 
+                      titles={titles} 
+                      onOpenRoulette={() => setShowRoulette(true)}
                     isBlurred={globalSettings.isBlurred}
                     onToggleBlur={handleToggleBlur}
                     onOpenStats={() => setShowStats(true)} 

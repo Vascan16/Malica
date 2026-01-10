@@ -187,7 +187,7 @@
         };
 
         const triggerGoldBurst = () => {
-             confetti({
+              confetti({
                 particleCount: 150,
                 spread: 100,
                 origin: { y: 0.7 },
@@ -284,7 +284,7 @@
         // 3. UI KOMPONENTE
         // ==========================================
 
-        const StatisticsModal = ({ show, onClose, history }) => {
+        const StatisticsModal = ({ show, onClose, onOpenGame, history }) => {
           const stats = useMemo(() => {
             const transactions = history.filter(e => e.type !== 'adjustment');
             if (transactions.length === 0) return null;
@@ -331,7 +331,12 @@
               <div className="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
                 <div className="p-6 bg-[#002f55] text-white flex justify-between items-center shrink-0">
                   <h2 className="text-xl font-black flex items-center gap-2"><BarChart3 /> Statistika</h2>
-                  <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X /></button>
+                  <div className="flex items-center gap-1">
+                      <button onClick={() => { onClose(); onOpenGame(); }} className="p-2 hover:bg-white/10 rounded-full transition-colors text-[#e4b00f]" title="Čakaš na malico? 🐍">
+                          <Gamepad2 size={24} />
+                      </button>
+                      <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X /></button>
+                  </div>
                 </div>
                 
                 <div className="p-6 overflow-y-auto custom-scrollbar space-y-6">
@@ -415,12 +420,12 @@
                 <p className="text-xs text-slate-400 mb-4">Sporočilo bo vidno vsem, dokler se ne vnese nov račun.</p>
                 
                 <textarea 
-                     autoFocus
-                     value={message}
-                     onChange={e => setMessage(e.target.value)}
-                     placeholder="Npr. Danes gremo na burgerje..."
-                     className="w-full bg-yellow-50/50 border-2 border-yellow-200 rounded-xl py-3 px-4 text-center font-bold text-slate-700 outline-none focus:border-yellow-400 focus:bg-white transition-all min-h-[80px] resize-none mb-4"
-                     onKeyDown={e => {
+                      autoFocus
+                      value={message}
+                      onChange={e => setMessage(e.target.value)}
+                      placeholder="Npr. Danes gremo na burgerje..."
+                      className="w-full bg-yellow-50/50 border-2 border-yellow-200 rounded-xl py-3 px-4 text-center font-bold text-slate-700 outline-none focus:border-yellow-400 focus:bg-white transition-all min-h-[80px] resize-none mb-4"
+                      onKeyDown={e => {
                         if(e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault();
                             onConfirm();
@@ -536,12 +541,16 @@
           );
         };
 
-        const SnakeGame = ({ onClose }) => {
+        const SnakeGame = ({ onClose, instantToggleBlur, isBlurred }) => {
             const canvasRef = useRef(null);
             const [score, setScore] = useState(0);
             const [highScore, setHighScore] = useState(parseInt(localStorage.getItem('snake_highscore') || '0'));
             const [gameOver, setGameOver] = useState(false);
             const [isPaused, setIsPaused] = useState(false);
+            
+            // Refs za preprečevanje stale closure v gameLoop
+            const gameOverRef = useRef(false);
+            const isPausedRef = useRef(false);
             
             // Game State Refs
             const snake = useRef([{x: 10, y: 10}]);
@@ -559,8 +568,13 @@
                 dir.current = {x: 0, y: 0};
                 nextDir.current = {x: 0, y: 0};
                 setScore(0);
+                
                 setGameOver(false);
+                gameOverRef.current = false;
+                
                 setIsPaused(false);
+                isPausedRef.current = false;
+                
                 placeFood();
                 if(gameLoopRef.current) clearInterval(gameLoopRef.current);
                 gameLoopRef.current = setInterval(gameLoop, 200);
@@ -581,7 +595,7 @@
             };
 
             const gameLoop = () => {
-                if(gameOver || isPaused) return;
+                if(gameOverRef.current || isPausedRef.current) return;
                 
                 dir.current = nextDir.current;
                 if(dir.current.x === 0 && dir.current.y === 0) return;
@@ -632,6 +646,7 @@
 
             const handleGameOver = () => {
                 setGameOver(true);
+                gameOverRef.current = true;
                 clearInterval(gameLoopRef.current);
             };
 
@@ -713,6 +728,18 @@
 
             return (
                 <div className="fixed inset-0 bg-slate-900/95 z-[100] flex flex-col items-center justify-center p-4 backdrop-blur-sm animate-fade-in touch-none select-none">
+                    
+                    {/* Instant Blur Button for Score >= 10 */}
+                    {score >= 10 && (
+                        <button 
+                            onClick={instantToggleBlur} 
+                            className="absolute top-6 left-6 z-[120] text-3xl opacity-50 hover:opacity-100 transition-opacity"
+                            title="Razkrij/Skrij"
+                        >
+                            {isBlurred ? '🙈' : '👁️'}
+                        </button>
+                    )}
+
                     <div className="w-full max-w-sm flex flex-col items-center">
                         <div className="flex justify-between w-full mb-4 text-white items-center">
                             <div className="flex flex-col">
@@ -839,7 +866,7 @@
           </div>
         );
 
-        const Navigation = ({ activeTab, setActiveTab }) => (
+        const Navigation = ({ activeTab, setActiveTab, isBlurred }) => (
           <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-2 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)] print:hidden z-50">
             <div className="max-w-md mx-auto flex justify-between items-center">
               <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === 'dashboard' ? 'text-[#002f55] bg-slate-100 scale-105' : 'text-slate-400'}`}><TrendingDown size={22} /><span className="text-[10px] mt-1 font-bold">Stanje</span></button>
@@ -850,7 +877,14 @@
               
               <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === 'history' ? 'text-[#002f55] bg-slate-100 scale-105' : 'text-slate-400'}`}><History size={22} /><span className="text-[10px] mt-1 font-bold">Zgodovina</span></button>
               
-              <button onClick={() => setActiveTab('settle')} className={`flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === 'settle' ? 'text-[#002f55] bg-slate-100 scale-105' : 'text-slate-400'}`}><Calculator size={22} /><span className="text-[10px] mt-1 font-bold">Obračun</span></button>
+              <button 
+                onClick={() => !isBlurred && setActiveTab('settle')} 
+                className={`flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === 'settle' ? 'text-[#002f55] bg-slate-100 scale-105' : 'text-slate-400'} ${isBlurred ? 'opacity-30 cursor-not-allowed' : ''}`}
+                disabled={isBlurred}
+              >
+                <Calculator size={22} />
+                <span className="text-[10px] mt-1 font-bold">Obračun</span>
+              </button>
             </div>
           </nav>
         );
@@ -859,7 +893,7 @@
         // 4. ZAVIHKI
         // ==========================================
 
-        const TabAnalytics = ({ history, members, setActiveTab }) => {
+        const TabAnalytics = ({ history, members, setActiveTab, isBlurred }) => {
             // 1. MAPPING BARV (Barva je vezana na ime člana)
             const memberColorMap = useMemo(() => {
                 const map = {};
@@ -979,7 +1013,7 @@
                         <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                             <IconPieChart size={16} /> Kdo je največ pojedel?
                         </h4>
-                        <div className="h-64 w-full">
+                        <div className={`h-64 w-full transition-all duration-500 ${isBlurred ? 'blur-lg select-none pointer-events-none opacity-50' : ''}`}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
@@ -1009,7 +1043,7 @@
                         <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                             <TrendingDown size={16} /> Gibanje stanja (Trend)
                         </h4>
-                        <div className="h-64 w-full -ml-2">
+                        <div className={`h-64 w-full -ml-2 transition-all duration-500 ${isBlurred ? 'blur-lg select-none pointer-events-none opacity-50' : ''}`}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={timeData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -1051,19 +1085,22 @@
                     {/* GUMB DO MATRIK */}
                     <button 
                         onClick={() => setActiveTab('matrix')} 
-                        className="w-full py-4 bg-slate-100 text-slate-600 font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-200 transition-all border border-slate-200"
+                        disabled={isBlurred}
+                        className={`w-full py-4 bg-slate-100 text-slate-600 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all border border-slate-200 ${isBlurred ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-200'}`}
                     >
-                        <Grid size={20} /> Podroben pregled matrik <ArrowRight size={16} />
+                        {isBlurred ? <Lock size={16} /> : <Grid size={20} />} 
+                        {isBlurred ? 'Podroben pregled skrit' : 'Podroben pregled matrik'} 
+                        {!isBlurred && <ArrowRight size={16} />}
                     </button>
                 </div>
             );
         };
 
 
-        const TabDashboard = ({ payerRanking, balances, setActiveTab, titles, onOpenRoulette, isBlurred, onToggleBlur, onOpenStats, memberHunger, onToggleHunger, dailyMessage, onEditMessage }) => (
+        const TabDashboard = ({ payerRanking, balances, setActiveTab, titles, onOpenRoulette, isBlurred, onOpenStats, memberHunger, onToggleHunger, dailyMessage, onEditMessage }) => (
           <div className="space-y-6 animate-fade-in">
             {/* SPOROČILO DNEVA - LOGIKA */}
-            {dailyMessage ? (
+            {dailyMessage && (
                 <div className="bg-yellow-100 border-2 border-yellow-200 p-4 rounded-2xl flex items-start gap-3 shadow-sm relative animate-fade-in">
                     <StickyNote className="text-yellow-500 shrink-0" size={24} />
                     <div className="flex-1">
@@ -1072,28 +1109,16 @@
                             {dailyMessage}
                         </p>
                     </div>
-                    <button 
-                        onClick={onEditMessage}
-                        className="p-2 bg-yellow-200 text-yellow-700 rounded-xl hover:bg-yellow-300 transition-colors"
-                    >
-                        <PenLine size={16} />
-                    </button>
-                </div>
-            ) : (
-                <div className="flex justify-end -mb-2"> 
-                    <button onClick={onEditMessage} className="text-slate-300 hover:text-[#002f55] transition-colors p-2 rounded-full hover:bg-slate-100" title="Dodaj sporočilo">
-                        <PenLine size={18} />
-                    </button>
                 </div>
             )}
 
             <div className="bg-white p-6 rounded-3xl shadow-lg border border-white text-center relative">
               <button 
-                onClick={onToggleBlur}
+                onClick={onEditMessage}
                 className="absolute top-4 right-4 text-slate-300 hover:text-[#002f55] transition-colors p-2"
-                title="Admin: Preklopi zasebnost"
+                title="Uredi sporočilo"
               >
-                {isBlurred ? <Eye size={18} /> : <EyeOff size={18} />}
+                <PenLine size={18} />
               </button>
 
               <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Naslednji plača</p>
@@ -1147,7 +1172,9 @@
               </div>
             </div>
              
-            <button onClick={onOpenRoulette} className="w-full py-4 bg-[#e4b00f] text-[#002f55] font-black text-lg rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#e4b00f]/20 hover:scale-[1.02] transition-transform active:scale-95"><Dices size={24} /> Kdo Plača? 🎲</button>
+            {isBlurred && (
+              <button onClick={onOpenRoulette} className="w-full py-4 bg-[#e4b00f] text-[#002f55] font-black text-lg rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#e4b00f]/20 hover:scale-[1.02] transition-transform active:scale-95"><Dices size={24} /> Kdo Plača? 🎲</button>
+            )}
              
             <button onClick={onOpenStats} className="w-full py-3 bg-[#002f55]/5 text-[#002f55] font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-[#002f55]/10 transition-all border border-[#002f55]/10"><BarChart3 size={18} /> Statistika</button>
           </div>
@@ -1183,9 +1210,12 @@
           </div>
         );
 
-        const TabHistory = ({ history, confirmDeleteEntry }) => (
+        const TabHistory = ({ history, confirmDeleteEntry, onToggleBlur }) => (
           <div className="space-y-4 animate-fade-in">
-            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 px-2"><History className="text-[#002f55]" /> Zgodovina</h3>
+            <div className="flex items-center justify-between px-2">
+                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2"><History className="text-[#002f55]" /> Zgodovina</h3>
+                <button onClick={onToggleBlur} className="text-slate-200 hover:text-[#002f55] transition-colors p-2" title="Admin"><Info size={16} /></button>
+            </div>
             <div className="space-y-3">
               {history.map(e => {
                 const isAdj = e.type === 'adjustment';
@@ -1366,9 +1396,9 @@
               const mList = [];
               const mHunger = {}; 
               snapshot.docs.forEach(doc => { 
-                 const d = doc.data();
-                 mList.push(d.name);
-                 if (d.isHungry) mHunger[d.name] = true; 
+                  const d = doc.data();
+                  mList.push(d.name);
+                  if (d.isHungry) mHunger[d.name] = true; 
                }); 
               
               if (mList.length === 0 && loading) {
@@ -1485,15 +1515,20 @@
             setShowAdminAuth(true);
           };
 
+          // --- NEW INSTANT TOGGLE BLUR FOR SNAKE GAME ---
+          const instantToggleBlur = async () => {
+              if (!user) return;
+              const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
+              await setDoc(settingsRef, { isBlurred: !globalSettings.isBlurred }, { merge: true });
+          };
+
           const handleAddEntrySubmit = async (e) => {
             e.preventDefault();
             if (!user || !amount || selectedParticipants.length === 0) return;
             if (splitType === 'manual' && !isManualBalanced) return; 
             
-            setPendingAction({ type: 'ADD' });
-            setAdminPinInput('');
-            setAdminAuthError(false);
-            setShowAdminAuth(true);
+            // Direktno izvedemo akcijo brez PIN preverjanja
+            await performAddEntry();
           };
 
           const setDailyMessageAction = async (msg) => {
@@ -1546,7 +1581,7 @@
 
             await batch.commit();
 
-            triggerGoldBurst();
+            // triggerGoldBurst();
 
             setAmount('');
             setManualAmounts({});
@@ -1786,9 +1821,14 @@
               <MessageModal show={showMessageModal} message={messageInput} setMessage={setMessageInput} onConfirm={saveMessageFromModal} onCancel={() => setShowMessageModal(false)} />
               
               {/* EASTER EGG GAME */}
-              {snakeMode && <SnakeGame onClose={() => setSnakeMode(false)} />}
+              {snakeMode && <SnakeGame onClose={() => setSnakeMode(false)} instantToggleBlur={instantToggleBlur} isBlurred={globalSettings.isBlurred} />}
 
-              <StatisticsModal show={showStats} onClose={() => setShowStats(false)} history={history} />
+              <StatisticsModal 
+                  show={showStats} 
+                  onClose={() => setShowStats(false)} 
+                  onOpenGame={() => setSnakeMode(true)}
+                  history={history} 
+              />
 
               <PrintReport history={history} members={members} balances={balances} settlements={settlements} />
 
@@ -1811,7 +1851,6 @@
                       titles={titles} 
                       onOpenRoulette={() => setShowRoulette(true)}
                     isBlurred={globalSettings.isBlurred}
-                    onToggleBlur={handleToggleBlur}
                     onOpenStats={() => setShowStats(true)} 
                     memberHunger={memberHunger}
                     onToggleHunger={toggleHungerAction}
@@ -1821,7 +1860,7 @@
                 )}
                 
                 {/* AKTIVACIJA NOVEGA ZAVIHEKA */}
-                {activeTab === 'analytics' && <TabAnalytics history={history} members={members} setActiveTab={setActiveTab} />}
+                {activeTab === 'analytics' && <TabAnalytics history={history} members={members} setActiveTab={setActiveTab} isBlurred={globalSettings.isBlurred} />}
                 
                 {activeTab === 'matrix' && <TabMatrix members={members} history={history} matrixType={matrixType} setMatrixType={setMatrixType} onPrint={handlePrintReport} />}
                 {activeTab === 'add' && (
@@ -1832,8 +1871,8 @@
                     manualAmounts={manualAmounts} setManualAmounts={setManualAmounts} isManualBalanced={isManualBalanced} 
                   />
                 )}
-                {activeTab === 'history' && <TabHistory history={history} confirmDeleteEntry={confirmDeleteEntry} />}
-                {activeTab === 'settle' && (
+                {activeTab === 'history' && <TabHistory history={history} confirmDeleteEntry={confirmDeleteEntry} onToggleBlur={handleToggleBlur} />}
+                {activeTab === 'settle' && !globalSettings.isBlurred && (
                   <TabSettlement 
                     settlements={settlements} onPrint={handlePrintReport} showResetConfirm={showResetConfirm} setShowResetConfirm={setShowResetConfirm} 
                     manualStartBalances={manualStartBalances} setManualStartBalances={setManualStartBalances} members={members} 
@@ -1852,7 +1891,7 @@
                 )}
               </main>
 
-              <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
+              <Navigation activeTab={activeTab} setActiveTab={setActiveTab} isBlurred={globalSettings.isBlurred} />
             </div>
           );
         }
